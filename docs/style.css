@@ -150,7 +150,7 @@ h1 {
     max-width: 600px;
     text-align: left;
     position: relative;
-    margin-top: 5vh; /* 화면 상단에서 5% (Viewport Height) 만큼 내림 */
+    margin-top: -20vh; /* 화면 상단에서 5% (Viewport Height) 만큼 내림 */
     max-height: 85vh; /* (margin-top 고려하여) 내용이 화면을 넘지 않도록 + 스크롤 */
     overflow-y: auto;
     box-sizing: border-box;
