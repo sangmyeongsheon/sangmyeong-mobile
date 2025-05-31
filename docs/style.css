@@ -1,13 +1,23 @@
+/* D2Coding 폰트 정의 */
+@font-face {
+    font-family: 'D2Coding'; /* 폰트 패밀리 이름 지정 */
+    src: url('./fonts/D2Coding.ttf') format('truetype'); /* 폰트 파일 경로 */
+    /* 만약 docs 폴더 바로 아래에 D2Coding.ttf를 두었다면 src: url('./D2Coding.ttf') format('truetype'); 로 수정 */
+    font-weight: normal;
+    font-style: normal;
+}
+
 body {
-    font-family: 'Nanum Gothic', 'Malgun Gothic', '맑은 고딕', Dotum, '돋움', sans-serif; /* 한글 폰트 우선 지정 */
+    /* D2Coding을 최우선으로 사용하고, 없을 경우 시스템 폰트 사용 */
+    font-family: 'D2Coding', 'Nanum Gothic', 'Malgun Gothic', '맑은 고딕', Dotum, '돋움', sans-serif;
     display: flex;
     flex-direction: column;
     align-items: center;
     margin: 0;
-    padding: 10px; /* 전체적인 여백 */
+    padding: 10px;
     background-color: #f0f0f0;
     color: #333;
-    -webkit-text-size-adjust: 100%; /* 모바일에서 텍스트 크기 자동 조정 방지 */
+    -webkit-text-size-adjust: 100%;
 }
 
 h1 {
@@ -24,39 +34,39 @@ h1 {
     background-color: white;
     padding: 15px;
     border-radius: 8px;
-    width: 100%; /* 최대 너비 제한을 위해 */
-    max-width: 680px; /* 데스크탑에서 너무 커지지 않도록, JS의 WIDTH와 유사하게 설정 */
+    width: 100%;
+    max-width: 680px;
     box-sizing: border-box;
 }
 
 #gameCanvas {
     border: 1px solid #ccc;
-    max-width: 100%; /* 부모 요소 너비를 넘지 않도록 */
-    height: auto; /* 비율 유지를 위해 */
-    display: block; /* 가운데 정렬 용이 */
+    max-width: 100%;
+    height: auto;
+    display: block;
     margin: 0 auto;
 }
 
 #infoPanel {
-    width: 100%; /* 캔버스 너비에 맞춤 (JS에서 설정된 캔버스 너비 기반) */
+    width: 100%;
     max-width: calc(8 * 80px); /* 데스크탑 기준 최대치, JS SQUARE_SIZE와 연동 필요 */
-    height: auto; /* 내용에 따라 높이 조절 */
+    height: auto;
     background-color: #e6e6e6;
     margin-top: 15px;
     padding: 10px;
     box-sizing: border-box;
     display: flex;
-    flex-wrap: wrap; /* 작은 화면에서 줄바꿈 허용 */
+    flex-wrap: wrap;
     justify-content: space-between;
     align-items: center;
     border-radius: 4px;
-    font-size: 0.9em;
+    font-size: 0.9em; /* D2Coding 폰트는 크기가 다를 수 있으니 필요시 조절 */
 }
 
 #infoPanel > div {
-    flex: 1 1 150px; /* flex-grow, flex-shrink, flex-basis */
+    flex: 1 1 150px;
     padding: 5px;
-    text-align: center; /* 모바일에서는 중앙 정렬이 보기 좋을 수 있음 */
+    text-align: center;
 }
 
 #score {
@@ -67,7 +77,7 @@ h1 {
 }
 #messageContainer {
     text-align: right;
-    min-height: 2.5em; /* 메시지가 여러 줄일 경우 대비 */
+    min-height: 2.5em;
 }
 
 #redScoreText { color: #c80000; }
@@ -77,7 +87,7 @@ h1 {
 #restartButton {
     margin-top: 15px;
     padding: 10px 20px;
-    font-size: 1em;
+    font-size: 1em; /* D2Coding 폰트에 맞춰 조절 가능 */
     color: white;
     background-color: #007bff;
     border: none;
@@ -102,25 +112,25 @@ h1 {
     align-items: center;
     text-align: center;
     z-index: 1000;
-    padding: 15px; /* 화면 가장자리 여백 */
+    padding: 15px;
     box-sizing: border-box;
 }
 
 .overlay-content {
     background-color: white;
     color: #333;
-    padding: 20px; /* 내부 여백 줄임 */
+    padding: 20px;
     border-radius: 8px;
     box-shadow: 0 0 15px rgba(0,0,0,0.5);
     width: 90%;
-    max-width: 400px; /* 너무 커지지 않도록 */
+    max-width: 400px;
 }
 
 .overlay-content h2 {
     margin-top: 0;
-    font-size: 1.5em; /* 모바일에 맞게 조정 */
+    font-size: 1.5em;
 }
 .overlay-content p {
-    font-size: 1em; /* 모바일에 맞게 조정 */
+    font-size: 1em;
     margin: 10px 0;
 }
