@@ -1,0 +1,130 @@
+body {
+    font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0;
+    padding-top: 20px;
+    background-color: #f0f0f0;
+    color: #333;
+}
+
+h1 {
+    margin-bottom: 20px;
+}
+
+#game-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    background-color: white;
+    padding: 20px; /* MARGIN과 유사한 역할 */
+    border-radius: 8px;
+}
+
+#gameCanvas {
+    border: 1px solid #ccc; /* GREY */
+    /* MARGIN은 JavaScript에서 좌표 계산 시 사용됨 */
+}
+
+#infoPanel {
+    width: calc(8 * 80px); /* BOARD_SIZE * SQUARE_SIZE - JS와 동기화 필요 */
+    height: 100px; /* INFO_PANEL_HEIGHT */
+    background-color: #e6e6e6; /* LIGHT_GREY */
+    margin-top: 15px;
+    padding: 10px 20px;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 4px;
+    font-size: 0.9em;
+}
+
+#infoPanel > div {
+    flex: 1;
+    padding: 0 10px;
+}
+
+#score {
+    text-align: left;
+}
+#turnInfo {
+    text-align: center;
+}
+#messageContainer {
+    text-align: right;
+    min-height: 3em; /* 메시지가 여러 줄일 경우 대비 */
+}
+
+#redScoreText { color: #c80000; /* RED_PIECE */ }
+#blueScoreText { color: #0000c8; /* BLUE_PIECE */ }
+#gameMessageText { color: #000; }
+
+
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.75); /* 반투명 검정 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    z-index: 1000;
+}
+
+.overlay-content {
+    background-color: white;
+    color: #333;
+    padding: 30px 40px;
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.5);
+}
+
+.overlay-content h2 {
+    margin-top: 0;
+    font-size: 2em;
+}
+.overlay-content p {
+    font-size: 1.1em;
+    margin: 10px 0;
+}
+
+/* 모바일 환경을 위한 간단한 반응형 처리 */
+@media (max-width: 768px) {
+    #game-container {
+        padding: 10px;
+    }
+    /* JS에서 SQUARE_SIZE를 줄이는 것을 고려해야 함 */
+    #infoPanel {
+        width: calc(8 * 60px); /* 예시: SQUARE_SIZE가 60으로 줄었다면 */
+        flex-direction: column;
+        height: auto;
+        padding: 15px;
+    }
+    #infoPanel > div {
+        padding: 5px 0;
+        text-align: center;
+        width: 100%;
+    }
+    #messageContainer {
+        text-align: center;
+    }
+    h1 {
+        font-size: 1.5em;
+    }
+    .overlay-content {
+        padding: 20px;
+        width: 90%;
+    }
+    .overlay-content h2 {
+        font-size: 1.5em;
+    }
+    .overlay-content p {
+        font-size: 1em;
+    }
+}

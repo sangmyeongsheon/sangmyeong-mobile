@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>리버시 유사 게임 (Web Version)</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>리버시 유사 게임</h1>
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+        <div id="infoPanel">
+            <div id="score">
+                <span id="redScoreText">빨강 (사람): 2</span><br>
+                <span id="blueScoreText">파랑 (AI): 2</span>
+            </div>
+            <div id="turnInfo">
+                <span id="currentPlayerTurnText"></span><br>
+                <span id="timerText"></span>
+            </div>
+            <div id="messageContainer">
+                <span id="gameMessageText"></span>
+            </div>
+        </div>
+    </div>
+
+    <div id="gameOverScreen" class="overlay" style="display:none;">
+        <div class="overlay-content">
+            <h2 id="gameOverTitle"></h2>
+            <p id="gameOverReason"></p>
+            <p>클릭하거나 'R' 키를 눌러 다시 플레이하세요.</p>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
