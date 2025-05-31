@@ -8,24 +8,35 @@
 </head>
 <body>
     <h1>리버시 유사 게임</h1>
-    <div id="game-container">
-        <canvas id="gameCanvas"></canvas>
-        <div id="infoPanel">
-            <div id="score">
-                <span id="redScoreText">빨강 (사람): 2</span><br>
-                <span id="blueScoreText">파랑 (AI): 2</span>
-            </div>
-            <div id="turnInfo">
-                <span id="currentPlayerTurnText"></span><br>
-                <span id="timerText"></span>
-            </div>
-            <div id="messageContainer">
-                <span id="gameMessageText"></span>
+
+    <div id="colorSelectionScreen" class="overlay" style="display: flex;"> <div class="overlay-content">
+            <h2>플레이할 색상을 선택하세요</h2>
+            <p>(빨강이 항상 선공입니다)</p>
+            <div class="button-group color-selection-buttons">
+                <button id="selectRedButton">빨강으로 플레이</button>
+                <button id="selectBlueButton">파랑으로 플레이</button>
             </div>
         </div>
-        <div class="button-group">
-            <button id="showRulesButton">게임 룰 보기</button>
-            <button id="restartButton">게임 재시작</button>
+    </div>
+
+    <div id="game-interface" style="display: none;"> <div id="game-container">
+            <canvas id="gameCanvas"></canvas>
+            <div id="infoPanel">
+                <div id="score">
+                    <span id="playerRScoreText">빨강 (): 2</span><br> <span id="playerBScoreText">파랑 (): 2</span>
+                </div>
+                <div id="turnInfo">
+                    <span id="currentPlayerTurnText"></span><br>
+                    <span id="timerText"></span>
+                </div>
+                <div id="messageContainer">
+                    <span id="gameMessageText"></span>
+                </div>
+            </div>
+            <div class="button-group">
+                <button id="showRulesButton">게임 룰 보기</button>
+                <button id="restartButton">게임 재시작 (색상 재선택)</button>
+            </div>
         </div>
     </div>
 
@@ -33,7 +44,7 @@
         <div class="overlay-content">
             <h2 id="gameOverTitle"></h2>
             <p id="gameOverReason"></p>
-            <p>화면을 클릭하거나 'R' 키를 눌러 다시 플레이하세요.</p>
+            <p>화면을 클릭하거나 'R' 키를 눌러 색상을 다시 선택하세요.</p>
         </div>
     </div>
 
@@ -43,7 +54,7 @@
             <h2>게임 룰 설명</h2>
             <div class="rules-text">
                 <p><strong>목표:</strong> 게임 종료 시 상대방보다 더 많은 자신의 말을 보드 위에 올려놓는 것입니다.</p>
-                <p><strong>시작:</strong> 각 플레이어는 보드의 양쪽 코너에 2개의 말을 가지고 시작합니다.</p>
+                <p><strong>시작:</strong> 각 플레이어는 보드의 양쪽 코너에 2개의 말을 가지고 시작합니다. (빨강 선공)</p>
                 <p><strong>말 이동:</strong></p>
                 <ul>
                     <li>자신의 턴에, 자신의 말 중 하나를 선택하여 비어있는 칸으로 이동시킬 수 있습니다.</li>

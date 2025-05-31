@@ -1,7 +1,7 @@
 /* D2Coding 폰트 정의 */
 @font-face {
     font-family: 'D2Coding';
-    src: url('./fonts/D2Coding.ttf') format('truetype'); /* ./fonts/ 폴더에 D2Coding.ttf가 있다고 가정 */
+    src: url('./fonts/D2Coding.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
 }
@@ -22,6 +22,13 @@ h1 {
     margin-bottom: 15px;
     font-size: 1.8em;
     text-align: center;
+}
+
+#game-interface { /* 게임 관련 모든 UI를 감싸는 래퍼 */
+    display: flex; /* 내부 #game-container 중앙 정렬 위해 */
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
 }
 
 #game-container {
@@ -71,18 +78,23 @@ h1 {
 #turnInfo { text-align: center; }
 #messageContainer { text-align: right; min-height: 2.5em; }
 
-#redScoreText { color: #c80000; }
-#blueScoreText { color: #0000c8; }
+/* 점수판 텍스트 색상은 유지, 역할 텍스트는 JS에서 채움 */
+#playerRScoreText { color: #c80000; } /* 빨강 말 색상 */
+#playerBScoreText { color: #0000c8; } /* 파랑 말 색상 */
 #gameMessageText { color: #000; }
 
 .button-group {
     margin-top: 15px;
     display: flex;
+    flex-wrap: wrap; /* 작은 화면에서 버튼 줄바꿈 */
+    justify-content: center; /* 버튼 중앙 정렬 */
     gap: 10px;
 }
 
 #restartButton, 
-#showRulesButton {
+#showRulesButton,
+#selectRedButton,
+#selectBlueButton { /* 모든 버튼에 공통 스타일 적용 */
     appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
@@ -98,50 +110,71 @@ h1 {
     box-sizing: border-box;
     line-height: normal;
     text-align: center;
+    flex-grow: 1; /* 버튼 그룹 내에서 버튼이 공간을 차지하도록 */
+    min-width: 120px; /* 버튼 최소 너비 */
 }
 #restartButton:hover, 
-#showRulesButton:hover {
+#showRulesButton:hover,
+#selectRedButton:hover,
+#selectBlueButton:hover {
     background-color: #0056b3;
 }
 
+/* 색상 선택 버튼 그룹 특정 스타일 */
+.color-selection-buttons {
+    flex-direction: column; /* 버튼 세로로 배치 */
+    width: 80%;
+    max-width: 300px;
+}
+
+
 /* --- 오버레이 공통 스타일 --- */
-.overlay { /* #gameOverScreen, #rulesModal 에 적용될 기본 오버레이 스타일 */
+.overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.6);
-    display: flex; /* 내부 컨텐츠 정렬 위해 */
-    justify-content: center; /* 가로 중앙 정렬 */
-    align-items: center;   /* 기본 세로 중앙 정렬 (gameOverScreen에 적용) */
-    z-index: 1000;
-    padding: 15px; /* 화면 가장자리와 컨텐츠 박스 간 최소 여백 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; /* 다른 요소들 위에 표시 */
+    padding: 15px;
     box-sizing: border-box;
 }
 
-/* 게임 오버 화면용 컨텐츠 박스 (기존 중앙 정렬 유지) */
-#gameOverScreen .overlay-content {
+/* 게임 오버 & 색상 선택 화면용 컨텐츠 박스 */
+#gameOverScreen .overlay-content,
+#colorSelectionScreen .overlay-content {
     background-color: white;
     color: #333;
-    padding: 20px 25px;
+    padding: 25px; /* 패딩 늘림 */
     border-radius: 8px;
     box-shadow: 0 0 15px rgba(0,0,0,0.5);
     width: 90%;
-    max-width: 400px;
+    max-width: 450px; /* 너비 약간 늘림 */
     text-align: center;
 }
-#gameOverScreen .overlay-content h2 { margin-top: 0; font-size: 1.5em; }
-#gameOverScreen .overlay-content p { font-size: 1em; margin: 10px 0; }
+#gameOverScreen .overlay-content h2,
+#colorSelectionScreen .overlay-content h2 {
+    margin-top: 0;
+    font-size: 1.5em;
+    margin-bottom: 15px; /* 제목 아래 간격 */
+}
+#gameOverScreen .overlay-content p,
+#colorSelectionScreen .overlay-content p {
+    font-size: 1em;
+    margin-bottom: 20px; /* 문단 아래 간격 */
+}
 
 
 /* --- 게임 룰 모달 스타일 --- */
-/* #rulesModal 오버레이의 세로 정렬만 수정 */
-#rulesModal.overlay { /* .overlay 기본 스타일 상속 후 align-items만 변경 */
-    align-items: flex-start; /* 컨텐츠를 오버레이 상단에 정렬 */
+#rulesModal.overlay {
+    align-items: flex-start;
 }
 
-#rulesModal .modal-content { /* #rulesModal 내부의 실제 컨텐츠 박스 */
+#rulesModal .modal-content {
     background-color: white;
     padding: 20px 25px;
     border-radius: 10px;
@@ -150,8 +183,8 @@ h1 {
     max-width: 600px;
     text-align: left;
     position: relative;
-    margin-top: -20vh; /* 화면 상단에서 5% (Viewport Height) 만큼 내림 */
-    max-height: 85vh; /* (margin-top 고려하여) 내용이 화면을 넘지 않도록 + 스크롤 */
+    margin-top: 5vh;
+    max-height: 85vh;
     overflow-y: auto;
     box-sizing: border-box;
 }
@@ -170,12 +203,8 @@ h1 {
     line-height: 1.65;
     font-size: 0.95em;
 }
-#rulesModal .rules-text ul {
-    padding-left: 25px;
-}
-#rulesModal .rules-text strong {
-    color: #333;
-}
+#rulesModal .rules-text ul { padding-left: 25px; }
+#rulesModal .rules-text strong { color: #333; }
 
 #rulesModal .modal-close-button {
     position: absolute;
@@ -189,6 +218,4 @@ h1 {
     line-height: 1;
     padding: 5px;
 }
-#rulesModal .modal-close-button:hover {
-    color: #555;
-}
+#rulesModal .modal-close-button:hover { color: #555; }
