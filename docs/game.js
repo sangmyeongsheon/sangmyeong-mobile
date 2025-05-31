@@ -1,26 +1,28 @@
 // --- 상수 ---
-const BOARD_SIZE = 8;
-const SQUARE_SIZE = 80; // 화면 크기에 따라 조절 가능 (CSS와 동기화)
-const MARGIN = 0; // Canvas 내부의 MARGIN, HTML에서 padding으로 대체했으므로 0으로 설정 가능
-const INFO_PANEL_HEIGHT_JS = 100; // CSS에서 설정되지만 JS에서 참조할 수 있음
+let BOARD_SIZE = 8;
+let SQUARE_SIZE = 80; // 초기값, 동적으로 변경됨
+let MARGIN = 0; // HTML에서 padding으로 처리
 
-const WIDTH = BOARD_SIZE * SQUARE_SIZE + 2 * MARGIN;
-const CANVAS_HEIGHT = BOARD_SIZE * SQUARE_SIZE + 2 * MARGIN; // 캔버스 자체의 높이
+// 초기 캔버스 크기는 SQUARE_SIZE에 따라 설정됨
+let WIDTH;
+let CANVAS_HEIGHT;
 
-// 색상 (CSS 클래스 또는 직접 스타일링으로 대체되거나 JS에서 사용)
+
+// 색상
 const BLACK_COLOR = 'rgb(0,0,0)';
 const WHITE_COLOR = 'rgb(255,255,255)';
 const GREY_COLOR = 'rgb(200,200,200)'; // 보드 선
 const RED_PIECE_COLOR = 'rgb(200,0,0)';
 const BLUE_PIECE_COLOR = 'rgb(0,0,200)';
-const HIGHLIGHT_VALID_SRC_COLOR = 'rgba(0,200,0,0.3)';
-const HIGHLIGHT_VALID_DST_COLOR = 'rgba(100,255,100,0.5)';
+const HIGHLIGHT_VALID_DST_COLOR = 'rgba(100,255,100,0.5)'; // 1칸 이동
+const HIGHLIGHT_JUMP_DST_COLOR = 'rgba(255,255,0,0.5)'; // 2칸 이동 (새로운 색)
 const HIGHLIGHT_SELECTED_COLOR = 'rgba(255,255,0,0.4)';
+
 
 // 말 상수
 const EMPTY = '.';
-const PLAYER_R = 'R'; // 사람 (빨강)
-const PLAYER_B = 'B'; // AI (파랑)
+const PLAYER_R = 'R';
+const PLAYER_B = 'B';
 
 // 게임 설정
 const HUMAN_PLAYER = PLAYER_R;
@@ -31,7 +33,7 @@ const HUMAN_TIME_LIMIT_S = 20;
 let canvas, ctx;
 let board;
 let currentPlayer;
-let selectedPieceCoords = null; // {r, c}
+let selectedPieceCoords = null;
 let humanValidMovesFromSelected = [];
 let gameOver = false;
 let winner = null;
@@ -42,13 +44,49 @@ let humanTimerInterval = null;
 
 // DOM 요소 참조
 let redScoreTextEl, blueScoreTextEl, currentPlayerTurnTextEl, timerTextEl, gameMessageTextEl;
-let gameOverScreenEl, gameOverTitleEl, gameOverReasonEl;
+let gameOverScreenEl, gameOverTitleEl, gameOverReasonEl, restartButtonEl;
 
-// 방향 벡터 (8방향)
+
 const dr = [-1, -1, 0, 1, 1, 1, 0, -1];
 const dc = [0, 1, 1, 1, 0, -1, -1, -1];
 
-// --- 게임 로직 함수 ---
+// --- 화면 크기 조절 함수 ---
+function adjustGameSize() {
+    const gameContainer = document.getElementById('game-container');
+    // game-container의 padding을 고려해야 정확한 가용 너비를 얻을 수 있습니다.
+    // 여기서는 간단히 window.innerWidth를 사용합니다.
+    const containerPadding = 30; // game-container의 좌우 padding 합 (15px + 15px)
+    let availableWidth = window.innerWidth - containerPadding; // 좌우 여백 제외
+    if (window.innerWidth > 700) { // 데스크탑 유사 환경 최대 너비 제한
+        availableWidth = 680 - containerPadding; // CSS의 max-width와 유사하게
+    }
+
+
+    SQUARE_SIZE = Math.floor(availableWidth / BOARD_SIZE);
+    if (SQUARE_SIZE > 80) SQUARE_SIZE = 80; // 최대 정사각형 크기 제한
+    if (SQUARE_SIZE < 30) SQUARE_SIZE = 30; // 최소 정사각형 크기 제한
+
+
+    WIDTH = BOARD_SIZE * SQUARE_SIZE + 2 * MARGIN;
+    CANVAS_HEIGHT = BOARD_SIZE * SQUARE_SIZE + 2 * MARGIN;
+
+    if (canvas) {
+        canvas.width = WIDTH;
+        canvas.height = CANVAS_HEIGHT;
+        // 정보 패널 너비도 동적으로 조절 (선택 사항, CSS로도 가능)
+        const infoPanelEl = document.getElementById('infoPanel');
+        if (infoPanelEl) {
+             infoPanelEl.style.maxWidth = `${WIDTH}px`;
+        }
+    }
+    // 게임이 진행 중이라면 화면 다시 그리기
+    if (board && !gameOver) { // 게임이 시작된 이후에만 renderGame 호출
+        renderGame();
+    }
+}
+
+
+// --- 게임 로직 함수 (이전과 동일, 변경 없음) ---
 function initialBoard() {
     const newBoard = Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(EMPTY));
     newBoard[0][0] = PLAYER_R;
@@ -82,7 +120,6 @@ function deepCopy(obj) {
     return copiedObject;
 }
 
-
 function isValidMoveOnTempBoard(tempBoard, sr, sc, tr, tc, playerColor) {
     if (!inBounds(sr, sc) || !inBounds(tr, tc)) return false;
     if (tempBoard[sr][sc] !== playerColor) return false;
@@ -94,9 +131,8 @@ function isValidMoveOnTempBoard(tempBoard, sr, sc, tr, tc, playerColor) {
     const absDCol = Math.abs(dCol);
     const step = Math.max(absDRow, absDCol);
 
-    if (!(step >= 1 && step <= 2)) return false; // 1 또는 2칸 이동
+    if (!(step >= 1 && step <= 2)) return false;
 
-    // 직선 또는 대각선 이동 확인
     return (absDRow === step && absDCol === 0) ||
            (absDRow === 0 && absDCol === step) ||
            (absDRow === step && absDCol === step);
@@ -120,7 +156,7 @@ function applyMoveOnTempBoard(tempBoard, sr, sc, tr, tc, playerColor) {
             flippedCount++;
         }
     }
-    return { flippedCount, isJump }; // AI 로직을 위해 isJump 반환
+    return { flippedCount, isJump };
 }
 
 function countPieces(boardState, playerColor) {
@@ -135,13 +171,14 @@ function countPieces(boardState, playerColor) {
     return count;
 }
 
+// getValidMoves는 is_jump 플래그를 이미 반환하므로 변경 없음
 function getValidMoves(boardState, playerColor) {
     const moves = [];
     for (let rStart = 0; rStart < BOARD_SIZE; rStart++) {
         for (let cStart = 0; cStart < BOARD_SIZE; cStart++) {
             if (boardState[rStart][cStart] === playerColor) {
-                for (let stepSize = 1; stepSize <= 2; stepSize++) { // 1 (복제) 또는 2 (점프)
-                    for (let i = 0; i < 8; i++) { // 8 방향
+                for (let stepSize = 1; stepSize <= 2; stepSize++) {
+                    for (let i = 0; i < 8; i++) {
                         const rTarget = rStart + dr[i] * stepSize;
                         const cTarget = cStart + dc[i] * stepSize;
                         if (isValidMoveOnTempBoard(boardState, rStart, cStart, rTarget, cTarget, playerColor)) {
@@ -156,12 +193,12 @@ function getValidMoves(boardState, playerColor) {
 }
 
 
-// --- AI 로직 ---
+// --- AI 로직 (이전과 동일, 변경 없음) ---
 function aiMoveGenerate(currentBoardState, aiColor) {
     const possibleMoves = getValidMoves(currentBoardState, aiColor);
 
     if (!possibleMoves.length) {
-        return null; // AI 패스
+        return null;
     }
 
     let bestMoveCandidate = possibleMoves[0];
@@ -176,19 +213,19 @@ function aiMoveGenerate(currentBoardState, aiColor) {
             move.sx, move.sy, move.tx, move.ty,
             aiColor
         );
-        move.immediate_flips = immediateFlips; // 동점 해결을 위해 저장
+        move.immediate_flips = immediateFlips;
 
         const opponentPossibleMoves = getValidMoves(tempBoardAfterMyMove, humanColor);
         let minMyScoreThisBranch = Infinity;
 
-        if (!opponentPossibleMoves.length) { // 상대방(사람)이 응수할 수 없는 경우
+        if (!opponentPossibleMoves.length) {
             const myScore = countPieces(tempBoardAfterMyMove, aiColor);
             const opponentScore = countPieces(tempBoardAfterMyMove, humanColor);
             minMyScoreThisBranch = myScore - opponentScore;
         } else {
             for (const oppMove of opponentPossibleMoves) {
                 let tempBoardAfterOpponentMove = deepCopy(tempBoardAfterMyMove);
-                applyMoveOnTempBoard( // 상대방 이동 적용 시 flippedCount는 사용 안 함
+                applyMoveOnTempBoard(
                     tempBoardAfterOpponentMove,
                     oppMove.sx, oppMove.sy, oppMove.tx, oppMove.ty,
                     humanColor
@@ -203,7 +240,6 @@ function aiMoveGenerate(currentBoardState, aiColor) {
         }
         move.score_after_opponent_reply = minMyScoreThisBranch;
 
-        // 결정 로직
         if (move.score_after_opponent_reply > maxScoreAfterOpponentReply) {
             maxScoreAfterOpponentReply = move.score_after_opponent_reply;
             maxImmediateFlipsForBestScore = move.immediate_flips;
@@ -213,7 +249,7 @@ function aiMoveGenerate(currentBoardState, aiColor) {
                 maxImmediateFlipsForBestScore = move.immediate_flips;
                 bestMoveCandidate = move;
             } else if (move.immediate_flips === maxImmediateFlipsForBestScore) {
-                if (bestMoveCandidate.is_jump && !move.is_jump) { // 점프보다 복제 선호
+                if (bestMoveCandidate.is_jump && !move.is_jump) {
                     bestMoveCandidate = move;
                 }
             }
@@ -234,14 +270,15 @@ function drawBoard() {
 }
 
 function drawPieces() {
-    const radius = SQUARE_SIZE / 2 - 8;
+    const radius = SQUARE_SIZE / 2 - 8; // 말 크기 조절
+    if (radius < 5) radius = 5; // 최소 반지름
+
     for (let r = 0; r < BOARD_SIZE; r++) {
         for (let c = 0; c < BOARD_SIZE; c++) {
             const piece = board[r][c];
             const centerX = MARGIN + c * SQUARE_SIZE + SQUARE_SIZE / 2;
             const centerY = MARGIN + r * SQUARE_SIZE + SQUARE_SIZE / 2;
 
-            // 하이라이트 먼저 그려서 말 아래에 깔리도록
             if (selectedPieceCoords && selectedPieceCoords.r === r && selectedPieceCoords.c === c) {
                 ctx.fillStyle = HIGHLIGHT_SELECTED_COLOR;
                 ctx.fillRect(MARGIN + c * SQUARE_SIZE, MARGIN + r * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE);
@@ -261,22 +298,25 @@ function drawPieces() {
         }
     }
 
-    // 선택된 말의 유효한 목적지 강조 (말 위에 겹쳐서 그려도 됨)
     if (selectedPieceCoords && humanValidMovesFromSelected.length > 0) {
         humanValidMovesFromSelected.forEach(move => {
             const tr = move.tx;
             const tc = move.ty;
-            ctx.fillStyle = HIGHLIGHT_VALID_DST_COLOR;
+            // 2칸 이동(점프)인지 1칸 이동인지에 따라 다른 색상 적용
+            ctx.fillStyle = move.is_jump ? HIGHLIGHT_JUMP_DST_COLOR : HIGHLIGHT_VALID_DST_COLOR;
             ctx.fillRect(MARGIN + tc * SQUARE_SIZE, MARGIN + tr * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE);
-            // 목적지에 작은 원이나 표시를 추가할 수도 있음
+
+            // 목적지에 작은 원 표시 (선택 사항)
             ctx.beginPath();
-            ctx.arc(MARGIN + tc * SQUARE_SIZE + SQUARE_SIZE / 2, MARGIN + tr * SQUARE_SIZE + SQUARE_SIZE / 2, radius / 3, 0, 2*Math.PI);
+            let smallRadius = radius / 3;
+            if (smallRadius < 2) smallRadius = 2;
+            ctx.arc(MARGIN + tc * SQUARE_SIZE + SQUARE_SIZE / 2, MARGIN + tr * SQUARE_SIZE + SQUARE_SIZE / 2, smallRadius, 0, 2 * Math.PI);
             ctx.fillStyle = 'rgba(0,0,0,0.2)';
             ctx.fill();
-
         });
     }
 }
+
 
 function updateInfoPanel() {
     const rPieces = countPieces(board, PLAYER_R);
@@ -312,18 +352,19 @@ function handleHumanTimeout() {
     selectedPieceCoords = null;
     humanValidMovesFromSelected = [];
 
-    if (lastPlayerPassed) { // 상대방(AI)도 패스한 상태에서 사람 시간 초과 -> 게임 종료
+    if (lastPlayerPassed) {
         endGameDueToConsecutivePassOrTimeout("AI 패스 후 사람 시간 초과!");
     } else {
-        lastPlayerPassed = true; // 사람이 패스한 것으로 간주 (시간 초과로)
+        lastPlayerPassed = true;
         switchTurn();
     }
-    renderGame(); // 메시지 업데이트 즉시 반영
+    renderGame();
 }
 
 
 // --- 게임 흐름 및 상태 관리 ---
 function resetGame() {
+    adjustGameSize(); // 리셋 시 게임 크기 다시 조절
     board = initialBoard();
     currentPlayer = HUMAN_PLAYER;
     selectedPieceCoords = null;
@@ -341,7 +382,7 @@ function resetGame() {
     } else {
         timerTextEl.textContent = "";
     }
-    
+
     gameOverScreenEl.style.display = 'none';
     renderGame();
 }
@@ -351,23 +392,22 @@ function switchTurn() {
     turnStartTime = Date.now();
     selectedPieceCoords = null;
     humanValidMovesFromSelected = [];
-    // gameMessage는 AI 턴 시작 시 또는 패스 시 설정됨
 
     if (humanTimerInterval) clearInterval(humanTimerInterval);
     if (!gameOver && currentPlayer === HUMAN_PLAYER) {
         gameMessage = "당신의 턴입니다.";
         humanTimerInterval = setInterval(updateTimerDisplay, 1000);
-        updateTimerDisplay(); // 즉시 타이머 업데이트
+        updateTimerDisplay();
     } else {
-        timerTextEl.textContent = ""; // AI 턴에는 타이머 숨김
+        timerTextEl.textContent = "";
     }
 
-    checkForPassOrGameOver(); // 턴 시작 시 패스/종료 여부 확인
+    checkForPassOrGameOver();
 
     if (!gameOver && currentPlayer === AI_PLAYER) {
         gameMessage = "AI가 생각 중입니다...";
-        renderGame(); // "AI 생각 중" 메시지 즉시 표시
-        setTimeout(runAiTurn, 800); // AI 생각 시간 시뮬레이션
+        renderGame();
+        setTimeout(runAiTurn, 800);
     }
     renderGame();
 }
@@ -382,13 +422,13 @@ function runAiTurn() {
         lastPlayerPassed = false;
     } else {
         gameMessage = "AI가 움직일 수 없어 패스합니다.";
-        if (lastPlayerPassed) { // 사람도 이전에 패스했다면
+        if (lastPlayerPassed) {
             endGameDueToConsecutivePassOrTimeout("양쪽 모두 패스!");
             return;
         }
         lastPlayerPassed = true;
     }
-    switchTurn(); // AI 턴 종료 후 사람 턴으로
+    switchTurn();
 }
 
 function checkForPassOrGameOver() {
@@ -397,7 +437,6 @@ function checkForPassOrGameOver() {
     const rPieces = countPieces(board, PLAYER_R);
     const bPieces = countPieces(board, PLAYER_B);
 
-    // 1. 말 개수 0개
     if (rPieces === 0) {
         triggerGameOver(PLAYER_B, "빨강 플레이어 말이 없습니다.");
         return;
@@ -407,33 +446,27 @@ function checkForPassOrGameOver() {
         return;
     }
 
-    // 2. 빈 칸 없음
     const emptyCells = board.flat().filter(cell => cell === EMPTY).length;
     if (emptyCells === 0) {
         endGameDueToBoardFull();
         return;
     }
 
-    // 3. 현재 플레이어가 움직일 수 없는 경우 (checkForPassOrGameOver는 턴 시작 시 호출됨)
     const currentPlayerMoves = getValidMoves(board, currentPlayer);
     if (!currentPlayerMoves.length) {
         if (currentPlayer === HUMAN_PLAYER) gameMessage = "움직일 수 있는 말이 없습니다. 턴이 자동으로 넘어갑니다.";
-        // AI의 패스는 runAiTurn에서 처리
-        
-        if (lastPlayerPassed) { // 이전 플레이어도 패스했다면
+
+        if (lastPlayerPassed) {
             endGameDueToConsecutivePassOrTimeout("양쪽 모두 움직일 수 없습니다!");
         } else {
             lastPlayerPassed = true;
-            // AI 턴에서 패스한 경우, 이 함수를 다시 부르지 않고 바로 switchTurn()으로 사람에게 넘어가므로
-            // 사람 턴 시작 시 이 로직에 걸려 다시 사람도 패스인지 확인.
-            // 현재 플레이어가 사람이고 패스하면, 바로 switchTurn() 호출
             if (currentPlayer === HUMAN_PLAYER) {
-                renderGame(); // 패스 메시지 표시
-                setTimeout(switchTurn, 1500); // 메시지 볼 시간 주고 턴 넘김
+                renderGame();
+                setTimeout(switchTurn, 1500);
             }
         }
     } else {
-        lastPlayerPassed = false; // 현재 플레이어는 움직일 수 있음
+        lastPlayerPassed = false;
     }
 }
 
@@ -473,8 +506,13 @@ function endGameDueToConsecutivePassOrTimeout(reasonPrefix) {
 // --- 이벤트 핸들러 ---
 function getClickedSquare(event) {
     const rect = canvas.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
+    // 터치 이벤트와 마우스 이벤트 좌표 얻는 방식 통일
+    const clientX = event.touches ? event.touches[0].clientX : event.clientX;
+    const clientY = event.touches ? event.touches[0].clientY : event.clientY;
+
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
+
 
     if (x >= MARGIN && x < WIDTH - MARGIN && y >= MARGIN && y < CANVAS_HEIGHT - MARGIN) {
         const c = Math.floor((x - MARGIN) / SQUARE_SIZE);
@@ -484,15 +522,18 @@ function getClickedSquare(event) {
     return null;
 }
 
-function handleCanvasClick(event) {
+function handleCanvasInteraction(event) {
+    // 기본 스크롤 동작 방지 (터치 시 화면 이동 방지)
+    // event.preventDefault(); // 필요에 따라 추가. 클릭 이벤트에서는 보통 불필요.
+
     if (gameOver) {
-        resetGame(); // 게임 오버 화면 클릭 시 재시작
+        resetGame();
         return;
     }
     if (currentPlayer !== HUMAN_PLAYER) return;
 
     const clickedPos = getClickedSquare(event);
-    if (!clickedPos) { // 보드 바깥 클릭
+    if (!clickedPos) {
         selectedPieceCoords = null;
         humanValidMovesFromSelected = [];
         gameMessage = "보드 안을 클릭하세요.";
@@ -502,7 +543,7 @@ function handleCanvasClick(event) {
 
     const { r: rClicked, c: cClicked } = clickedPos;
 
-    if (!selectedPieceCoords) { // 첫 번째 클릭: 말 선택
+    if (!selectedPieceCoords) {
         if (board[rClicked][cClicked] === HUMAN_PLAYER) {
             selectedPieceCoords = { r: rClicked, c: cClicked };
             const allHumanMoves = getValidMoves(board, HUMAN_PLAYER);
@@ -511,7 +552,7 @@ function handleCanvasClick(event) {
             );
             if (!humanValidMovesFromSelected.length) {
                 gameMessage = "이 말은 움직일 수 없습니다.";
-                selectedPieceCoords = null; // 이동 불가 시 선택 해제
+                selectedPieceCoords = null;
             } else {
                 gameMessage = "선택됨. 목적지를 클릭하세요.";
             }
@@ -520,7 +561,7 @@ function handleCanvasClick(event) {
         } else {
             gameMessage = "상대방의 말입니다. 자신의 말을 선택하세요.";
         }
-    } else { // 두 번째 클릭: 목적지 선택
+    } else {
         const sr = selectedPieceCoords.r;
         const sc = selectedPieceCoords.c;
         const chosenMove = humanValidMovesFromSelected.find(
@@ -531,24 +572,23 @@ function handleCanvasClick(event) {
             applyMoveOnTempBoard(board, sr, sc, rClicked, cClicked, HUMAN_PLAYER);
             selectedPieceCoords = null;
             humanValidMovesFromSelected = [];
-            gameMessage = ""; // 이동 성공 시 메시지 초기화
-            lastPlayerPassed = false; // 이동했으므로 패스 아님
-            switchTurn(); // 턴 넘김
+            gameMessage = "";
+            lastPlayerPassed = false;
+            switchTurn();
         } else {
-            // 다른 자신의 말을 클릭했는지 확인 (선택 변경)
             if (board[rClicked][cClicked] === HUMAN_PLAYER) {
-                selectedPieceCoords = { r: rClicked, c: cClicked }; // 선택 변경
+                selectedPieceCoords = { r: rClicked, c: cClicked };
                 const allHumanMoves = getValidMoves(board, HUMAN_PLAYER);
                 humanValidMovesFromSelected = allHumanMoves.filter(
                     m => m.sx === rClicked && m.sy === cClicked
                 );
                 if (!humanValidMovesFromSelected.length) {
                     gameMessage = "이 말은 움직일 수 없습니다. 다른 말을 선택하세요.";
-                    selectedPieceCoords = null; 
+                    selectedPieceCoords = null;
                 } else {
                     gameMessage = "선택 변경됨. 목적지를 클릭하세요.";
                 }
-            } else { // 빈 칸이나 상대방 말을 목적지로 클릭 (유효하지 않은 이동)
+            } else {
                  gameMessage = "잘못된 목적지입니다. 유효한 위치를 선택하세요.";
             }
         }
@@ -557,25 +597,22 @@ function handleCanvasClick(event) {
 }
 
 
-// --- 메인 게임 루프 ---
+// --- 메인 게임 루프 (렌더링) ---
 function renderGame() {
-    // 캔버스 클리어
-    ctx.fillStyle = WHITE_COLOR; // 배경색
+    if (!ctx) return; // 아직 초기화되지 않았다면 실행하지 않음
+    ctx.fillStyle = WHITE_COLOR;
     ctx.fillRect(0, 0, WIDTH, CANVAS_HEIGHT);
 
     drawBoard();
     drawPieces();
-    updateInfoPanel(); // 점수, 턴, 메시지 업데이트
+    updateInfoPanel();
 }
 
 // --- 초기화 ---
 window.onload = function() {
     canvas = document.getElementById('gameCanvas');
     ctx = canvas.getContext('2d');
-    canvas.width = WIDTH;
-    canvas.height = CANVAS_HEIGHT;
 
-    // DOM 요소 가져오기
     redScoreTextEl = document.getElementById('redScoreText');
     blueScoreTextEl = document.getElementById('blueScoreText');
     currentPlayerTurnTextEl = document.getElementById('currentPlayerTurnText');
@@ -584,27 +621,29 @@ window.onload = function() {
     gameOverScreenEl = document.getElementById('gameOverScreen');
     gameOverTitleEl = document.getElementById('gameOverTitle');
     gameOverReasonEl = document.getElementById('gameOverReason');
+    restartButtonEl = document.getElementById('restartButton'); // Restart 버튼 DOM 요소
+
+    // 화면 크기 조절 및 초기 게임 설정
+    adjustGameSize(); // 최초 로드 시 크기 조절
+    resetGame(); // 게임 상태 초기화 및 첫 렌더링
 
     // 이벤트 리스너
-    canvas.addEventListener('click', handleCanvasClick);
-    gameOverScreenEl.addEventListener('click', resetGame); // 게임오버 화면 클릭 시 리셋
+    // 모바일 터치와 데스크탑 마우스 클릭 모두 지원
+    canvas.addEventListener('click', handleCanvasInteraction);
+    // canvas.addEventListener('touchstart', handleCanvasInteraction, { passive: false }); // 스크롤 방지가 필요하다면 passive: false
+
+
+    gameOverScreenEl.addEventListener('click', resetGame);
+    restartButtonEl.addEventListener('click', resetGame); // Restart 버튼에 resetGame 함수 연결
+
     document.addEventListener('keydown', (event) => {
-        if (event.key.toLowerCase() === 'r' && gameOver) {
+        if (event.key.toLowerCase() === 'r' && (gameOver || !gameOver)) { // 언제든 R키로 리셋 가능하도록
             resetGame();
         }
     });
-    
-    // 반응형 SQUARE_SIZE 조정 (선택적)
-    // if (window.innerWidth < 768) {
-    //     SQUARE_SIZE = 60; // CSS와 동기화 필요
-    //     WIDTH = BOARD_SIZE * SQUARE_SIZE + 2 * MARGIN;
-    //     CANVAS_HEIGHT = BOARD_SIZE * SQUARE_SIZE + 2 * MARGIN;
-    //     canvas.width = WIDTH;
-    //     canvas.height = CANVAS_HEIGHT;
-    //     document.getElementById('infoPanel').style.width = `${BOARD_SIZE * SQUARE_SIZE}px`;
-    // }
 
-    resetGame(); // 게임 시작
-    // gameLoop는 requestAnimationFrame 기반이 아니라 이벤트 기반으로 동작.
-    // 타이머 업데이트는 setInterval로, 나머지는 이벤트 발생 시 renderGame() 호출.
+    window.addEventListener('resize', () => {
+        adjustGameSize();
+        renderGame(); // 리사이즈 후 즉시 다시 그리기
+    });
 };

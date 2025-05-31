@@ -1,16 +1,19 @@
 body {
-    font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
+    font-family: 'Nanum Gothic', 'Malgun Gothic', '맑은 고딕', Dotum, '돋움', sans-serif; /* 한글 폰트 우선 지정 */
     display: flex;
     flex-direction: column;
     align-items: center;
     margin: 0;
-    padding-top: 20px;
+    padding: 10px; /* 전체적인 여백 */
     background-color: #f0f0f0;
     color: #333;
+    -webkit-text-size-adjust: 100%; /* 모바일에서 텍스트 크기 자동 조정 방지 */
 }
 
 h1 {
-    margin-bottom: 20px;
+    margin-bottom: 15px;
+    font-size: 1.8em;
+    text-align: center;
 }
 
 #game-container {
@@ -19,23 +22,31 @@ h1 {
     align-items: center;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     background-color: white;
-    padding: 20px; /* MARGIN과 유사한 역할 */
+    padding: 15px;
     border-radius: 8px;
+    width: 100%; /* 최대 너비 제한을 위해 */
+    max-width: 680px; /* 데스크탑에서 너무 커지지 않도록, JS의 WIDTH와 유사하게 설정 */
+    box-sizing: border-box;
 }
 
 #gameCanvas {
-    border: 1px solid #ccc; /* GREY */
-    /* MARGIN은 JavaScript에서 좌표 계산 시 사용됨 */
+    border: 1px solid #ccc;
+    max-width: 100%; /* 부모 요소 너비를 넘지 않도록 */
+    height: auto; /* 비율 유지를 위해 */
+    display: block; /* 가운데 정렬 용이 */
+    margin: 0 auto;
 }
 
 #infoPanel {
-    width: calc(8 * 80px); /* BOARD_SIZE * SQUARE_SIZE - JS와 동기화 필요 */
-    height: 100px; /* INFO_PANEL_HEIGHT */
-    background-color: #e6e6e6; /* LIGHT_GREY */
+    width: 100%; /* 캔버스 너비에 맞춤 (JS에서 설정된 캔버스 너비 기반) */
+    max-width: calc(8 * 80px); /* 데스크탑 기준 최대치, JS SQUARE_SIZE와 연동 필요 */
+    height: auto; /* 내용에 따라 높이 조절 */
+    background-color: #e6e6e6;
     margin-top: 15px;
-    padding: 10px 20px;
+    padding: 10px;
     box-sizing: border-box;
     display: flex;
+    flex-wrap: wrap; /* 작은 화면에서 줄바꿈 허용 */
     justify-content: space-between;
     align-items: center;
     border-radius: 4px;
@@ -43,8 +54,9 @@ h1 {
 }
 
 #infoPanel > div {
-    flex: 1;
-    padding: 0 10px;
+    flex: 1 1 150px; /* flex-grow, flex-shrink, flex-basis */
+    padding: 5px;
+    text-align: center; /* 모바일에서는 중앙 정렬이 보기 좋을 수 있음 */
 }
 
 #score {
@@ -55,13 +67,28 @@ h1 {
 }
 #messageContainer {
     text-align: right;
-    min-height: 3em; /* 메시지가 여러 줄일 경우 대비 */
+    min-height: 2.5em; /* 메시지가 여러 줄일 경우 대비 */
 }
 
-#redScoreText { color: #c80000; /* RED_PIECE */ }
-#blueScoreText { color: #0000c8; /* BLUE_PIECE */ }
+#redScoreText { color: #c80000; }
+#blueScoreText { color: #0000c8; }
 #gameMessageText { color: #000; }
 
+#restartButton {
+    margin-top: 15px;
+    padding: 10px 20px;
+    font-size: 1em;
+    color: white;
+    background-color: #007bff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+#restartButton:hover {
+    background-color: #0056b3;
+}
 
 .overlay {
     position: fixed;
@@ -69,62 +96,31 @@ h1 {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.75); /* 반투명 검정 */
+    background-color: rgba(0, 0, 0, 0.75);
     display: flex;
     justify-content: center;
     align-items: center;
     text-align: center;
     z-index: 1000;
+    padding: 15px; /* 화면 가장자리 여백 */
+    box-sizing: border-box;
 }
 
 .overlay-content {
     background-color: white;
     color: #333;
-    padding: 30px 40px;
+    padding: 20px; /* 내부 여백 줄임 */
     border-radius: 8px;
     box-shadow: 0 0 15px rgba(0,0,0,0.5);
+    width: 90%;
+    max-width: 400px; /* 너무 커지지 않도록 */
 }
 
 .overlay-content h2 {
     margin-top: 0;
-    font-size: 2em;
+    font-size: 1.5em; /* 모바일에 맞게 조정 */
 }
 .overlay-content p {
-    font-size: 1.1em;
+    font-size: 1em; /* 모바일에 맞게 조정 */
     margin: 10px 0;
-}
-
-/* 모바일 환경을 위한 간단한 반응형 처리 */
-@media (max-width: 768px) {
-    #game-container {
-        padding: 10px;
-    }
-    /* JS에서 SQUARE_SIZE를 줄이는 것을 고려해야 함 */
-    #infoPanel {
-        width: calc(8 * 60px); /* 예시: SQUARE_SIZE가 60으로 줄었다면 */
-        flex-direction: column;
-        height: auto;
-        padding: 15px;
-    }
-    #infoPanel > div {
-        padding: 5px 0;
-        text-align: center;
-        width: 100%;
-    }
-    #messageContainer {
-        text-align: center;
-    }
-    h1 {
-        font-size: 1.5em;
-    }
-    .overlay-content {
-        padding: 20px;
-        width: 90%;
-    }
-    .overlay-content h2 {
-        font-size: 1.5em;
-    }
-    .overlay-content p {
-        font-size: 1em;
-    }
 }

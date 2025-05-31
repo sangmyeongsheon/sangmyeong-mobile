@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>리버시 유사 게임 (Web Version)</title>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -23,13 +23,14 @@
                 <span id="gameMessageText"></span>
             </div>
         </div>
+        <button id="restartButton">게임 재시작</button>
     </div>
 
     <div id="gameOverScreen" class="overlay" style="display:none;">
         <div class="overlay-content">
             <h2 id="gameOverTitle"></h2>
             <p id="gameOverReason"></p>
-            <p>클릭하거나 'R' 키를 눌러 다시 플레이하세요.</p>
+            <p>화면을 클릭하거나 'R' 키를 눌러 다시 플레이하세요.</p>
         </div>
     </div>
 
