@@ -1,7 +1,7 @@
 /* D2Coding 폰트 정의 */
 @font-face {
   font-family: "D2Coding"; /* 폰트 패밀리 이름 지정 */
-  src: url("./fonts/D2Coding.ttf") format("truetype"); /* 폰트 파일 경로 */
+  src: url("./D2Coding.ttf") format("truetype"); /* 폰트 파일 경로 */
   /* 만약 docs 폴더 바로 아래에 D2Coding.ttf를 두었다면 src: url('./D2Coding.ttf') format('truetype'); 로 수정 */
   font-weight: normal;
   font-style: normal;
