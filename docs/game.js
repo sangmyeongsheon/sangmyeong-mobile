@@ -8,25 +8,46 @@ let CANVAS_HEIGHT;
 
 const BLACK_COLOR = 'rgb(0,0,0)';
 const WHITE_COLOR = 'rgb(255,255,255)';
-// ... (다른 상수들 이전과 동일) ...
+const GREY_COLOR = 'rgb(200,200,200)';
+const RED_PIECE_COLOR = 'rgb(200,0,0)';
+const BLUE_PIECE_COLOR = 'rgb(0,0,200)';
+const HIGHLIGHT_VALID_DST_COLOR = 'rgba(100,255,100,0.5)';
 const HIGHLIGHT_JUMP_DST_COLOR = 'rgba(255,255,0,0.5)';
+const HIGHLIGHT_SELECTED_COLOR = 'rgba(255,255,0,0.4)';
 
+
+const EMPTY = '.';
+const PLAYER_R = 'R';
+const PLAYER_B = 'B';
+
+const HUMAN_PLAYER = PLAYER_R;
+const AI_PLAYER = PLAYER_B;
+const HUMAN_TIME_LIMIT_S = 20;
 
 // --- 전역 변수 (이전과 동일) ---
 let canvas, ctx;
 let board;
-// ... (다른 전역 변수들 이전과 동일) ...
+let currentPlayer;
+let selectedPieceCoords = null;
+let humanValidMovesFromSelected = [];
+let gameOver = false;
+let winner = null;
+let gameMessage = "";
+let turnStartTime;
+let lastPlayerPassed = false;
 let humanTimerInterval = null;
 
 // DOM 요소 참조
 let redScoreTextEl, blueScoreTextEl, currentPlayerTurnTextEl, timerTextEl, gameMessageTextEl;
 let gameOverScreenEl, gameOverTitleEl, gameOverReasonEl, restartButtonEl;
-let showRulesButtonEl, rulesModalEl, modalCloseButtonEl; // 룰 모달 관련 DOM 요소 추가
+let showRulesButtonEl, rulesModalEl, modalCloseButtonEl;
 
+
+const dr = [-1, -1, 0, 1, 1, 1, 0, -1];
+const dc = [0, 1, 1, 1, 0, -1, -1, -1];
 
 // --- 화면 크기 조절 함수 (이전과 동일) ---
 function adjustGameSize() {
-    // ... (이전 코드와 동일) ...
     const gameContainer = document.getElementById('game-container');
     const containerPadding = parseInt(window.getComputedStyle(gameContainer).paddingLeft) * 2 || 30;
     let availableWidth = window.innerWidth - containerPadding;
@@ -49,14 +70,13 @@ function adjustGameSize() {
              infoPanelEl.style.maxWidth = `${WIDTH}px`;
         }
     }
-    if (board && ctx) { // ctx가 초기화된 후에만 renderGame 호출
+    if (board && ctx) {
         renderGame();
     }
 }
 
 
-// --- 게임 로직 함수들 (initialBoard, inBounds, opponent, deepCopy, isValidMoveOnTempBoard, applyMoveOnTempBoard, countPieces, getValidMoves, aiMoveGenerate - 이전과 동일) ---
-// ... (이전 코드와 동일하게 유지) ...
+// --- 게임 로직 함수들 (이전과 동일) ---
 function initialBoard() {
     const newBoard = Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(EMPTY));
     newBoard[0][0] = PLAYER_R;
@@ -119,8 +139,8 @@ function applyMoveOnTempBoard(tempBoard, sr, sc, tr, tc, playerColor) {
 
     const oppColor = opponent(playerColor);
     for (let i = 0; i < 8; i++) {
-        const r_adj = tr + dr[i]; // 변수명 충돌 피하기 위해 r -> r_adj
-        const c_adj = tc + dc[i]; // 변수명 충돌 피하기 위해 c -> c_adj
+        const r_adj = tr + dr[i];
+        const c_adj = tc + dc[i];
         if (inBounds(r_adj, c_adj) && tempBoard[r_adj][c_adj] === oppColor) {
             tempBoard[r_adj][c_adj] = playerColor;
             flippedCount++;
@@ -226,8 +246,7 @@ function aiMoveGenerate(currentBoardState, aiColor) {
 }
 
 
-// --- 렌더링 함수들 (drawBoard, drawPieces, updateInfoPanel, updateTimerDisplay, handleHumanTimeout - 이전과 동일 또는 약간 수정) ---
-// ... (이전 코드와 동일하게 유지, drawPieces는 이미 수정됨) ...
+// --- 렌더링 함수들 (이전과 동일) ---
 function drawBoard() {
     ctx.strokeStyle = GREY_COLOR;
     ctx.lineWidth = 1;
@@ -328,12 +347,8 @@ function handleHumanTimeout() {
 }
 
 
-// --- 게임 흐름 및 상태 관리 함수들 (resetGame, switchTurn, runAiTurn, checkForPassOrGameOver, triggerGameOver, endGameDueToBoardFull, endGameDueToConsecutivePassOrTimeout - 이전과 동일) ---
-// ... (이전 코드와 동일하게 유지) ...
+// --- 게임 흐름 및 상태 관리 함수들 (이전과 동일) ---
 function resetGame() {
-    // adjustGameSize는 window.onload와 resize에서 호출되므로, 여기서는 호출하지 않거나,
-    // resetGame 호출 시 항상 현재 크기에 맞추고 싶다면 호출할 수 있습니다.
-    // adjustGameSize(); // 필요시 주석 해제
     board = initialBoard();
     currentPlayer = HUMAN_PLAYER;
     selectedPieceCoords = null;
@@ -345,16 +360,17 @@ function resetGame() {
     lastPlayerPassed = false;
 
     if (humanTimerInterval) clearInterval(humanTimerInterval);
-    if (currentPlayer === HUMAN_PLAYER && !gameOver) { // gameOver가 아닐 때만 타이머 시작
+    if (currentPlayer === HUMAN_PLAYER && !gameOver) {
         humanTimerInterval = setInterval(updateTimerDisplay, 1000);
         updateTimerDisplay();
     } else {
         timerTextEl.textContent = "";
     }
 
-    gameOverScreenEl.style.display = 'none';
-    rulesModalEl.style.display = 'none'; // 룰 모달도 숨김
-    renderGame();
+    if (gameOverScreenEl) gameOverScreenEl.style.display = 'none';
+    if (rulesModalEl) rulesModalEl.style.display = 'none'; // 추가: 리셋 시 룰 모달도 숨김
+    
+    adjustGameSize(); // 리셋 시 항상 크기 재조정 및 첫 렌더링
 }
 
 function switchTurn() {
@@ -378,7 +394,7 @@ function switchTurn() {
         gameMessage = "AI가 생각 중입니다...";
         renderGame();
         setTimeout(runAiTurn, 800);
-    } else { // 사람 턴이거나 게임 종료 시 즉시 렌더링
+    } else {
        renderGame();
     }
 }
@@ -395,11 +411,11 @@ function runAiTurn() {
         gameMessage = "AI가 움직일 수 없어 패스합니다.";
         if (lastPlayerPassed) {
             endGameDueToConsecutivePassOrTimeout("양쪽 모두 패스!");
-            return; // 게임 종료이므로 switchTurn 호출 안 함
+            return;
         }
         lastPlayerPassed = true;
     }
-    if (!gameOver) switchTurn(); // 게임이 종료되지 않았을 때만 턴 전환
+    if (!gameOver) switchTurn();
 }
 
 function checkForPassOrGameOver() {
@@ -426,19 +442,19 @@ function checkForPassOrGameOver() {
     const currentPlayerMoves = getValidMoves(board, currentPlayer);
     if (!currentPlayerMoves.length) {
         if (currentPlayer === HUMAN_PLAYER) gameMessage = "움직일 수 있는 말이 없습니다. 턴이 자동으로 넘어갑니다.";
-        // AI 패스는 runAiTurn에서 gameMessage 설정
 
         if (lastPlayerPassed) {
             endGameDueToConsecutivePassOrTimeout("양쪽 모두 움직일 수 없습니다!");
         } else {
             lastPlayerPassed = true;
-            if (currentPlayer === HUMAN_PLAYER) { // 사람 플레이어가 패스하는 경우
-                renderGame(); // 메시지 표시
-                setTimeout(() => { // 메시지 확인 후 턴 넘김
-                    if (!gameOver) switchTurn(); // 게임오버가 중간에 발생하지 않았다면 턴 넘김
+            if (currentPlayer === HUMAN_PLAYER) {
+                renderGame();
+                setTimeout(() => {
+                    if (!gameOver) switchTurn();
                 }, 1500);
             }
-            // AI가 패스하는 경우는 runAiTurn에서 처리 후 switchTurn() 호출
+            // AI가 패스하는 경우는 runAiTurn 이후 switchTurn에서 이 함수가 다시 호출될 때,
+            // 또는 runAiTurn에서 직접 게임 종료 조건을 체크. (현재는 runAiTurn에서 종료 조건 후 return)
         }
     } else {
         lastPlayerPassed = false;
@@ -450,12 +466,13 @@ function triggerGameOver(winPlayer, reason) {
     winner = winPlayer;
     gameMessage = reason;
     if (humanTimerInterval) clearInterval(humanTimerInterval);
-    timerTextEl.textContent = ""; // 게임 종료 시 타이머 텍스트 지우기
+    timerTextEl.textContent = "";
 
-    gameOverTitleEl.textContent = winner === "Draw" ? "무승부입니다!" : (winner === HUMAN_PLAYER ? "당신 (빨강) 승리!" : "AI (파랑) 승리!");
-    gameOverReasonEl.textContent = reason;
-    gameOverScreenEl.style.display = 'flex';
-    renderGame(); // 최종 상태 렌더링
+    if (gameOverTitleEl) gameOverTitleEl.textContent = winner === "Draw" ? "무승부입니다!" : (winner === HUMAN_PLAYER ? "당신 (빨강) 승리!" : "AI (파랑) 승리!");
+    if (gameOverReasonEl) gameOverReasonEl.textContent = reason;
+    if (gameOverScreenEl) gameOverScreenEl.style.display = 'flex';
+    
+    renderGame();
 }
 
 function endGameDueToBoardFull() {
@@ -479,8 +496,7 @@ function endGameDueToConsecutivePassOrTimeout(reasonPrefix) {
 }
 
 
-// --- 이벤트 핸들러들 (getClickedSquare, handleCanvasInteraction - 이전과 동일) ---
-// ... (이전 코드와 동일하게 유지) ...
+// --- 이벤트 핸들러들 (이전과 동일) ---
 function getClickedSquare(event) {
     const rect = canvas.getBoundingClientRect();
     const clientX = event.touches ? event.touches[0].clientX : event.clientX;
@@ -498,11 +514,11 @@ function getClickedSquare(event) {
 }
 
 function handleCanvasInteraction(event) {
-    if (gameOver && rulesModalEl.style.display === 'none') { // 룰 모달이 안떠있을 때만 게임오버 화면 클릭으로 리셋
+    if (gameOver && rulesModalEl && rulesModalEl.style.display === 'none') {
         resetGame();
         return;
     }
-    if (currentPlayer !== HUMAN_PLAYER || gameOver) return; // 게임 진행중 사람 턴일 때만
+    if (currentPlayer !== HUMAN_PLAYER || gameOver) return;
 
     const clickedPos = getClickedSquare(event);
     if (!clickedPos) {
@@ -546,8 +562,8 @@ function handleCanvasInteraction(event) {
             humanValidMovesFromSelected = [];
             gameMessage = "";
             lastPlayerPassed = false;
-            switchTurn(); // 여기서 renderGame()이 호출됨
-            return; // 이동 후 추가 렌더링 방지
+            switchTurn();
+            return;
         } else {
             if (board[rClicked][cClicked] === HUMAN_PLAYER) {
                 selectedPieceCoords = { r: rClicked, c: cClicked };
@@ -584,8 +600,8 @@ function renderGame() {
 // --- 초기화 ---
 window.onload = function() {
     canvas = document.getElementById('gameCanvas');
-    // ctx는 adjustGameSize 또는 resetGame에서 설정될 수 있으므로, null 체크 후 사용
-    // ctx = canvas.getContext('2d'); // 여기서 바로 할당해도 무방
+    // ctx는 adjustGameSize 또는 resetGame에서 명시적으로 설정하므로 여기서 null일 수 있음
+    // adjustGameSize() 호출 시 canvas가 필요하므로 먼저 할당
 
     redScoreTextEl = document.getElementById('redScoreText');
     blueScoreTextEl = document.getElementById('blueScoreText');
@@ -598,39 +614,59 @@ window.onload = function() {
     restartButtonEl = document.getElementById('restartButton');
     showRulesButtonEl = document.getElementById('showRulesButton');
     rulesModalEl = document.getElementById('rulesModal');
-    modalCloseButtonEl = document.querySelector('#rulesModal .modal-close-button');
+    modalCloseButtonEl = document.querySelector('#rulesModal .modal-close-button'); // CSS 선택자 사용
 
+    // 디버깅: 요소들이 제대로 선택되었는지 확인
+    console.log("룰 보기 버튼:", showRulesButtonEl);
+    console.log("룰 모달 창:", rulesModalEl);
+    console.log("모달 닫기 버튼:", modalCloseButtonEl);
 
-    adjustGameSize(); // 여기서 canvas.getContext('2d') 호출될 수 있음
-    if (!ctx && canvas) ctx = canvas.getContext('2d'); // adjustGameSize 후에도 ctx가 없을 경우 대비
-    resetGame();
+    if (canvas) {
+        ctx = canvas.getContext('2d'); // 여기서 ctx를 확실히 초기화
+    }
+    
+    adjustGameSize(); // 여기서 내부적으로 renderGame()이 호출될 수 있음 (board가 있을 때)
+    resetGame(); // 여기서도 adjustGameSize()가 호출되고, 최종적으로 renderGame() 호출
 
-    // 이벤트 리스너
-    canvas.addEventListener('click', handleCanvasInteraction);
-    // canvas.addEventListener('touchstart', handleCanvasInteraction); // 필요시 터치 이벤트 추가
+    // 이벤트 리스너 (요소들이 확실히 로드된 후 추가)
+    if (canvas) {
+      canvas.addEventListener('click', handleCanvasInteraction);
+      // canvas.addEventListener('touchstart', handleCanvasInteraction);
+    }
 
-    gameOverScreenEl.addEventListener('click', () => {
-        if(rulesModalEl.style.display === 'none') resetGame(); // 룰 모달이 꺼져있을때만 리셋
-    });
-    restartButtonEl.addEventListener('click', resetGame);
+    if (gameOverScreenEl) {
+        gameOverScreenEl.addEventListener('click', () => {
+            // 룰 모달이 떠있지 않을때만 게임오버 화면 클릭으로 리셋
+            if(rulesModalEl && rulesModalEl.style.display === 'none') resetGame();
+        });
+    }
+    if (restartButtonEl) restartButtonEl.addEventListener('click', resetGame);
 
-    showRulesButtonEl.addEventListener('click', () => {
-        rulesModalEl.style.display = 'flex';
-    });
-    modalCloseButtonEl.addEventListener('click', () => {
-        rulesModalEl.style.display = 'none';
-    });
-    rulesModalEl.addEventListener('click', (event) => { // 모달 배경 클릭 시 닫기
-        if (event.target === rulesModalEl) {
+    if (showRulesButtonEl && rulesModalEl) {
+        showRulesButtonEl.addEventListener('click', () => {
+            console.log("룰 보기 버튼 클릭됨. 모달 상태:", rulesModalEl.style.display); // 클릭 로그
+            rulesModalEl.style.display = 'flex';
+            console.log("모달 display를 flex로 변경 시도 후:", rulesModalEl.style.display); // 변경 후 상태 로그
+        });
+    }
+    if (modalCloseButtonEl && rulesModalEl) {
+        modalCloseButtonEl.addEventListener('click', () => {
             rulesModalEl.style.display = 'none';
-        }
-    });
+        });
+    }
+    if (rulesModalEl) {
+        rulesModalEl.addEventListener('click', (event) => {
+            if (event.target === rulesModalEl) { // 모달 배경 클릭 시 닫기
+                rulesModalEl.style.display = 'none';
+            }
+        });
+    }
 
     document.addEventListener('keydown', (event) => {
         if (event.key.toLowerCase() === 'r') {
             resetGame();
         }
-        if (event.key === "Escape" && rulesModalEl.style.display === 'flex') { // ESC로 룰 모달 닫기
+        if (event.key === "Escape" && rulesModalEl && rulesModalEl.style.display === 'flex') {
             rulesModalEl.style.display = 'none';
         }
     });
