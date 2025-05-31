@@ -1,39 +1,42 @@
 <!DOCTYPE html>
 <html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>¸®¹ö½Ã À¯»ç °ÔÀÓ (Web Version)</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <h1>¸®¹ö½Ã À¯»ç °ÔÀÓ</h1>
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>ë¦¬ë²„ì‹œ ìœ ì‚¬ ê²Œìž„ (Web Version)</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <h1>ë¦¬ë²„ì‹œ ìœ ì‚¬ ê²Œìž„</h1>
     <div id="game-container">
-        <canvas id="gameCanvas"></canvas>
-        <div id="infoPanel">
-            <div id="score">
-                <span id="redScoreText">»¡°­ (»ç¶÷): 2</span><br>
-                <span id="blueScoreText">ÆÄ¶û (AI): 2</span>
-            </div>
-            <div id="turnInfo">
-                <span id="currentPlayerTurnText"></span><br>
-                <span id="timerText"></span>
-            </div>
-            <div id="messageContainer">
-                <span id="gameMessageText"></span>
-            </div>
+      <canvas id="gameCanvas"></canvas>
+      <div id="infoPanel">
+        <div id="score">
+          <span id="redScoreText">ë¹¨ê°• (ì‚¬ëžŒ): 2</span><br />
+          <span id="blueScoreText">íŒŒëž‘ (AI): 2</span>
         </div>
-        <button id="restartButton">°ÔÀÓ Àç½ÃÀÛ</button>
+        <div id="turnInfo">
+          <span id="currentPlayerTurnText"></span><br />
+          <span id="timerText"></span>
+        </div>
+        <div id="messageContainer">
+          <span id="gameMessageText"></span>
+        </div>
+      </div>
+      <button id="restartButton">ê²Œìž„ ìž¬ì‹œìž‘</button>
     </div>
 
-    <div id="gameOverScreen" class="overlay" style="display:none;">
-        <div class="overlay-content">
-            <h2 id="gameOverTitle"></h2>
-            <p id="gameOverReason"></p>
-            <p>È­¸éÀ» Å¬¸¯ÇÏ°Å³ª 'R' Å°¸¦ ´­·¯ ´Ù½Ã ÇÃ·¹ÀÌÇÏ¼¼¿ä.</p>
-        </div>
+    <div id="gameOverScreen" class="overlay" style="display: none">
+      <div class="overlay-content">
+        <h2 id="gameOverTitle"></h2>
+        <p id="gameOverReason"></p>
+        <p>í™”ë©´ì„ í´ë¦­í•˜ê±°ë‚˜ 'R' í‚¤ë¥¼ ëˆŒëŸ¬ ë‹¤ì‹œ í”Œë ˆì´í•˜ì„¸ìš”.</p>
+      </div>
     </div>
 
     <script src="game.js"></script>
-</body>
+  </body>
 </html>

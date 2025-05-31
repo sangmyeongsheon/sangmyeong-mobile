@@ -1,136 +1,145 @@
-/* D2Coding ∆˘∆Æ ¡§¿« */
+/* D2Coding Ìè∞Ìä∏ Ï†ïÏùò */
 @font-face {
-    font-family: 'D2Coding'; /* ∆˘∆Æ ∆–π–∏Æ ¿Ã∏ß ¡ˆ¡§ */
-    src: url('./fonts/D2Coding.ttf') format('truetype'); /* ∆˘∆Æ ∆ƒ¿œ ∞Ê∑Œ */
-    /* ∏∏æ‡ docs ∆˙¥ı πŸ∑Œ æ∆∑°ø° D2Coding.ttf∏¶ µŒæ˙¥Ÿ∏È src: url('./D2Coding.ttf') format('truetype'); ∑Œ ºˆ¡§ */
-    font-weight: normal;
-    font-style: normal;
+  font-family: "D2Coding"; /* Ìè∞Ìä∏ Ìå®Î∞ÄÎ¶¨ Ïù¥Î¶Ñ ÏßÄÏ†ï */
+  src: url("./fonts/D2Coding.ttf") format("truetype"); /* Ìè∞Ìä∏ ÌååÏùº Í≤ΩÎ°ú */
+  /* ÎßåÏïΩ docs Ìè¥Îçî Î∞îÎ°ú ÏïÑÎûòÏóê D2Coding.ttfÎ•º ÎëêÏóàÎã§Î©¥ src: url('./D2Coding.ttf') format('truetype'); Î°ú ÏàòÏ†ï */
+  font-weight: normal;
+  font-style: normal;
 }
 
 body {
-    /* D2Coding¿ª √÷øÏº±¿∏∑Œ ªÁøÎ«œ∞Ì, æ¯¿ª ∞ÊøÏ Ω√Ω∫≈€ ∆˘∆Æ ªÁøÎ */
-    font-family: 'D2Coding', 'Nanum Gothic', 'Malgun Gothic', '∏º¿∫ ∞ÌµÒ', Dotum, 'µ∏øÚ', sans-serif;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin: 0;
-    padding: 10px;
-    background-color: #f0f0f0;
-    color: #333;
-    -webkit-text-size-adjust: 100%;
+  /* D2CodingÏùÑ ÏµúÏö∞ÏÑ†ÏúºÎ°ú ÏÇ¨Ïö©ÌïòÍ≥†, ÏóÜÏùÑ Í≤ΩÏö∞ ÏãúÏä§ÌÖú Ìè∞Ìä∏ ÏÇ¨Ïö© */
+  font-family: "D2Coding", "Nanum Gothic", "Malgun Gothic", "ÎßëÏùÄ Í≥†Îîï", Dotum,
+    "ÎèãÏõÄ", sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0;
+  padding: 10px;
+  background-color: #f0f0f0;
+  color: #333;
+  -webkit-text-size-adjust: 100%;
 }
 
 h1 {
-    margin-bottom: 15px;
-    font-size: 1.8em;
-    text-align: center;
+  margin-bottom: 15px;
+  font-size: 1.8em;
+  text-align: center;
 }
 
 #game-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    background-color: white;
-    padding: 15px;
-    border-radius: 8px;
-    width: 100%;
-    max-width: 680px;
-    box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  background-color: white;
+  padding: 15px;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 680px;
+  box-sizing: border-box;
 }
 
 #gameCanvas {
-    border: 1px solid #ccc;
-    max-width: 100%;
-    height: auto;
-    display: block;
-    margin: 0 auto;
+  border: 1px solid #ccc;
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
 }
 
 #infoPanel {
-    width: 100%;
-    max-width: calc(8 * 80px); /* µ•Ω∫≈©≈æ ±‚¡ÿ √÷¥Îƒ°, JS SQUARE_SIZEøÕ ø¨µø « ø‰ */
-    height: auto;
-    background-color: #e6e6e6;
-    margin-top: 15px;
-    padding: 10px;
-    box-sizing: border-box;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    align-items: center;
-    border-radius: 4px;
-    font-size: 0.9em; /* D2Coding ∆˘∆Æ¥¬ ≈©±‚∞° ¥Ÿ∏¶ ºˆ ¿÷¿∏¥œ « ø‰Ω√ ¡∂¿˝ */
+  width: 100%;
+  max-width: calc(
+    8 * 80px
+  ); /* Îç∞Ïä§ÌÅ¨ÌÉë Í∏∞Ï§Ä ÏµúÎåÄÏπò, JS SQUARE_SIZEÏôÄ Ïó∞Îèô ÌïÑÏöî */
+  height: auto;
+  background-color: #e6e6e6;
+  margin-top: 15px;
+  padding: 10px;
+  box-sizing: border-box;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: 4px;
+  font-size: 0.9em; /* D2Coding Ìè∞Ìä∏Îäî ÌÅ¨Í∏∞Í∞Ä Îã§Î•º Ïàò ÏûàÏúºÎãà ÌïÑÏöîÏãú Ï°∞Ï†à */
 }
 
 #infoPanel > div {
-    flex: 1 1 150px;
-    padding: 5px;
-    text-align: center;
+  flex: 1 1 150px;
+  padding: 5px;
+  text-align: center;
 }
 
 #score {
-    text-align: left;
+  text-align: left;
 }
 #turnInfo {
-    text-align: center;
+  text-align: center;
 }
 #messageContainer {
-    text-align: right;
-    min-height: 2.5em;
+  text-align: right;
+  min-height: 2.5em;
 }
 
-#redScoreText { color: #c80000; }
-#blueScoreText { color: #0000c8; }
-#gameMessageText { color: #000; }
+#redScoreText {
+  color: #c80000;
+}
+#blueScoreText {
+  color: #0000c8;
+}
+#gameMessageText {
+  color: #000;
+}
 
 #restartButton {
-    margin-top: 15px;
-    padding: 10px 20px;
-    font-size: 1em; /* D2Coding ∆˘∆Æø° ∏¬√Á ¡∂¿˝ ∞°¥… */
-    color: white;
-    background-color: #007bff;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
+  margin-top: 15px;
+  padding: 10px 20px;
+  font-size: 1em; /* D2Coding Ìè∞Ìä∏Ïóê ÎßûÏ∂∞ Ï°∞Ï†à Í∞ÄÎä• */
+  color: white;
+  background-color: #007bff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
 }
 
 #restartButton:hover {
-    background-color: #0056b3;
+  background-color: #0056b3;
 }
 
 .overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.75);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    z-index: 1000;
-    padding: 15px;
-    box-sizing: border-box;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.75);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  z-index: 1000;
+  padding: 15px;
+  box-sizing: border-box;
 }
 
 .overlay-content {
-    background-color: white;
-    color: #333;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 0 15px rgba(0,0,0,0.5);
-    width: 90%;
-    max-width: 400px;
+  background-color: white;
+  color: #333;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+  width: 90%;
+  max-width: 400px;
 }
 
 .overlay-content h2 {
-    margin-top: 0;
-    font-size: 1.5em;
+  margin-top: 0;
+  font-size: 1.5em;
 }
 .overlay-content p {
-    font-size: 1em;
-    margin: 10px 0;
+  font-size: 1em;
+  margin: 10px 0;
 }

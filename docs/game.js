@@ -1,35 +1,33 @@
-// --- »ó¼ö ---
+// --- ìƒìˆ˜ ---
 let BOARD_SIZE = 8;
-let SQUARE_SIZE = 80; // ÃÊ±â°ª, µ¿ÀûÀ¸·Î º¯°æµÊ
-let MARGIN = 0; // HTML¿¡¼­ paddingÀ¸·Î Ã³¸®
+let SQUARE_SIZE = 80; // ì´ˆê¸°ê°’, ë™ì ìœ¼ë¡œ ë³€ê²½ë¨
+let MARGIN = 0; // HTMLì—ì„œ paddingìœ¼ë¡œ ì²˜ë¦¬
 
-// ÃÊ±â Äµ¹ö½º Å©±â´Â SQUARE_SIZE¿¡ µû¶ó ¼³Á¤µÊ
+// ì´ˆê¸° ìº”ë²„ìŠ¤ í¬ê¸°ëŠ” SQUARE_SIZEì— ë”°ë¼ ì„¤ì •ë¨
 let WIDTH;
 let CANVAS_HEIGHT;
 
+// ìƒ‰ìƒ
+const BLACK_COLOR = "rgb(0,0,0)";
+const WHITE_COLOR = "rgb(255,255,255)";
+const GREY_COLOR = "rgb(200,200,200)"; // ë³´ë“œ ì„ 
+const RED_PIECE_COLOR = "rgb(200,0,0)";
+const BLUE_PIECE_COLOR = "rgb(0,0,200)";
+const HIGHLIGHT_VALID_DST_COLOR = "rgba(100,255,100,0.5)"; // 1ì¹¸ ì´ë™
+const HIGHLIGHT_JUMP_DST_COLOR = "rgba(255,255,0,0.5)"; // 2ì¹¸ ì´ë™ (ìƒˆë¡œìš´ ìƒ‰)
+const HIGHLIGHT_SELECTED_COLOR = "rgba(255,255,0,0.4)";
 
-// »ö»ó
-const BLACK_COLOR = 'rgb(0,0,0)';
-const WHITE_COLOR = 'rgb(255,255,255)';
-const GREY_COLOR = 'rgb(200,200,200)'; // º¸µå ¼±
-const RED_PIECE_COLOR = 'rgb(200,0,0)';
-const BLUE_PIECE_COLOR = 'rgb(0,0,200)';
-const HIGHLIGHT_VALID_DST_COLOR = 'rgba(100,255,100,0.5)'; // 1Ä­ ÀÌµ¿
-const HIGHLIGHT_JUMP_DST_COLOR = 'rgba(255,255,0,0.5)'; // 2Ä­ ÀÌµ¿ (»õ·Î¿î »ö)
-const HIGHLIGHT_SELECTED_COLOR = 'rgba(255,255,0,0.4)';
+// ë§ ìƒìˆ˜
+const EMPTY = ".";
+const PLAYER_R = "R";
+const PLAYER_B = "B";
 
-
-// ¸» »ó¼ö
-const EMPTY = '.';
-const PLAYER_R = 'R';
-const PLAYER_B = 'B';
-
-// °ÔÀÓ ¼³Á¤
+// ê²Œì„ ì„¤ì •
 const HUMAN_PLAYER = PLAYER_R;
 const AI_PLAYER = PLAYER_B;
 const HUMAN_TIME_LIMIT_S = 20;
 
-// --- Àü¿ª º¯¼ö ---
+// --- ì „ì—­ ë³€ìˆ˜ ---
 let canvas, ctx;
 let board;
 let currentPlayer;
@@ -42,608 +40,686 @@ let turnStartTime;
 let lastPlayerPassed = false;
 let humanTimerInterval = null;
 
-// DOM ¿ä¼Ò ÂüÁ¶
-let redScoreTextEl, blueScoreTextEl, currentPlayerTurnTextEl, timerTextEl, gameMessageTextEl;
+// DOM ìš”ì†Œ ì°¸ì¡°
+let redScoreTextEl,
+  blueScoreTextEl,
+  currentPlayerTurnTextEl,
+  timerTextEl,
+  gameMessageTextEl;
 let gameOverScreenEl, gameOverTitleEl, gameOverReasonEl, restartButtonEl;
-
 
 const dr = [-1, -1, 0, 1, 1, 1, 0, -1];
 const dc = [0, 1, 1, 1, 0, -1, -1, -1];
 
-// --- È­¸é Å©±â Á¶Àı ÇÔ¼ö ---
+// --- í™”ë©´ í¬ê¸° ì¡°ì ˆ í•¨ìˆ˜ ---
 function adjustGameSize() {
-    const gameContainer = document.getElementById('game-container');
-    // game-containerÀÇ paddingÀ» °í·ÁÇØ¾ß Á¤È®ÇÑ °¡¿ë ³Êºñ¸¦ ¾òÀ» ¼ö ÀÖ½À´Ï´Ù.
-    // ¿©±â¼­´Â °£´ÜÈ÷ window.innerWidth¸¦ »ç¿ëÇÕ´Ï´Ù.
-    const containerPadding = 30; // game-containerÀÇ ÁÂ¿ì padding ÇÕ (15px + 15px)
-    let availableWidth = window.innerWidth - containerPadding; // ÁÂ¿ì ¿©¹é Á¦¿Ü
-    if (window.innerWidth > 700) { // µ¥½ºÅ©Å¾ À¯»ç È¯°æ ÃÖ´ë ³Êºñ Á¦ÇÑ
-        availableWidth = 680 - containerPadding; // CSSÀÇ max-width¿Í À¯»çÇÏ°Ô
+  const gameContainer = document.getElementById("game-container");
+  // game-containerì˜ paddingì„ ê³ ë ¤í•´ì•¼ ì •í™•í•œ ê°€ìš© ë„ˆë¹„ë¥¼ ì–»ì„ ìˆ˜ ìˆìŠµë‹ˆë‹¤.
+  // ì—¬ê¸°ì„œëŠ” ê°„ë‹¨íˆ window.innerWidthë¥¼ ì‚¬ìš©í•©ë‹ˆë‹¤.
+  const containerPadding = 30; // game-containerì˜ ì¢Œìš° padding í•© (15px + 15px)
+  let availableWidth = window.innerWidth - containerPadding; // ì¢Œìš° ì—¬ë°± ì œì™¸
+  if (window.innerWidth > 700) {
+    // ë°ìŠ¤í¬íƒ‘ ìœ ì‚¬ í™˜ê²½ ìµœëŒ€ ë„ˆë¹„ ì œí•œ
+    availableWidth = 680 - containerPadding; // CSSì˜ max-widthì™€ ìœ ì‚¬í•˜ê²Œ
+  }
+
+  SQUARE_SIZE = Math.floor(availableWidth / BOARD_SIZE);
+  if (SQUARE_SIZE > 80) SQUARE_SIZE = 80; // ìµœëŒ€ ì •ì‚¬ê°í˜• í¬ê¸° ì œí•œ
+  if (SQUARE_SIZE < 30) SQUARE_SIZE = 30; // ìµœì†Œ ì •ì‚¬ê°í˜• í¬ê¸° ì œí•œ
+
+  WIDTH = BOARD_SIZE * SQUARE_SIZE + 2 * MARGIN;
+  CANVAS_HEIGHT = BOARD_SIZE * SQUARE_SIZE + 2 * MARGIN;
+
+  if (canvas) {
+    canvas.width = WIDTH;
+    canvas.height = CANVAS_HEIGHT;
+    // ì •ë³´ íŒ¨ë„ ë„ˆë¹„ë„ ë™ì ìœ¼ë¡œ ì¡°ì ˆ (ì„ íƒ ì‚¬í•­, CSSë¡œë„ ê°€ëŠ¥)
+    const infoPanelEl = document.getElementById("infoPanel");
+    if (infoPanelEl) {
+      infoPanelEl.style.maxWidth = `${WIDTH}px`;
     }
-
-
-    SQUARE_SIZE = Math.floor(availableWidth / BOARD_SIZE);
-    if (SQUARE_SIZE > 80) SQUARE_SIZE = 80; // ÃÖ´ë Á¤»ç°¢Çü Å©±â Á¦ÇÑ
-    if (SQUARE_SIZE < 30) SQUARE_SIZE = 30; // ÃÖ¼Ò Á¤»ç°¢Çü Å©±â Á¦ÇÑ
-
-
-    WIDTH = BOARD_SIZE * SQUARE_SIZE + 2 * MARGIN;
-    CANVAS_HEIGHT = BOARD_SIZE * SQUARE_SIZE + 2 * MARGIN;
-
-    if (canvas) {
-        canvas.width = WIDTH;
-        canvas.height = CANVAS_HEIGHT;
-        // Á¤º¸ ÆĞ³Î ³Êºñµµ µ¿ÀûÀ¸·Î Á¶Àı (¼±ÅÃ »çÇ×, CSS·Îµµ °¡´É)
-        const infoPanelEl = document.getElementById('infoPanel');
-        if (infoPanelEl) {
-             infoPanelEl.style.maxWidth = `${WIDTH}px`;
-        }
-    }
-    // °ÔÀÓÀÌ ÁøÇà ÁßÀÌ¶ó¸é È­¸é ´Ù½Ã ±×¸®±â
-    if (board && !gameOver) { // °ÔÀÓÀÌ ½ÃÀÛµÈ ÀÌÈÄ¿¡¸¸ renderGame È£Ãâ
-        renderGame();
-    }
+  }
+  // ê²Œì„ì´ ì§„í–‰ ì¤‘ì´ë¼ë©´ í™”ë©´ ë‹¤ì‹œ ê·¸ë¦¬ê¸°
+  if (board && !gameOver) {
+    // ê²Œì„ì´ ì‹œì‘ëœ ì´í›„ì—ë§Œ renderGame í˜¸ì¶œ
+    renderGame();
+  }
 }
 
-
-// --- °ÔÀÓ ·ÎÁ÷ ÇÔ¼ö (ÀÌÀü°ú µ¿ÀÏ, º¯°æ ¾øÀ½) ---
+// --- ê²Œì„ ë¡œì§ í•¨ìˆ˜ (ì´ì „ê³¼ ë™ì¼, ë³€ê²½ ì—†ìŒ) ---
 function initialBoard() {
-    const newBoard = Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(EMPTY));
-    newBoard[0][0] = PLAYER_R;
-    newBoard[0][BOARD_SIZE - 1] = PLAYER_B;
-    newBoard[BOARD_SIZE - 1][0] = PLAYER_B;
-    newBoard[BOARD_SIZE - 1][BOARD_SIZE - 1] = PLAYER_R;
-    return newBoard;
+  const newBoard = Array(BOARD_SIZE)
+    .fill(null)
+    .map(() => Array(BOARD_SIZE).fill(EMPTY));
+  newBoard[0][0] = PLAYER_R;
+  newBoard[0][BOARD_SIZE - 1] = PLAYER_B;
+  newBoard[BOARD_SIZE - 1][0] = PLAYER_B;
+  newBoard[BOARD_SIZE - 1][BOARD_SIZE - 1] = PLAYER_R;
+  return newBoard;
 }
 
 function inBounds(r, c) {
-    return r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE;
+  return r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE;
 }
 
 function opponent(playerColor) {
-    return playerColor === PLAYER_R ? PLAYER_B : PLAYER_R;
+  return playerColor === PLAYER_R ? PLAYER_B : PLAYER_R;
 }
 
 function deepCopy(obj) {
-    if (obj === null || typeof obj !== 'object') {
-        return obj;
+  if (obj === null || typeof obj !== "object") {
+    return obj;
+  }
+  if (Array.isArray(obj)) {
+    return obj.map(deepCopy);
+  }
+  const copiedObject = {};
+  for (const key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      copiedObject[key] = deepCopy(obj[key]);
     }
-    if (Array.isArray(obj)) {
-        return obj.map(deepCopy);
-    }
-    const copiedObject = {};
-    for (const key in obj) {
-        if (obj.hasOwnProperty(key)) {
-            copiedObject[key] = deepCopy(obj[key]);
-        }
-    }
-    return copiedObject;
+  }
+  return copiedObject;
 }
 
 function isValidMoveOnTempBoard(tempBoard, sr, sc, tr, tc, playerColor) {
-    if (!inBounds(sr, sc) || !inBounds(tr, tc)) return false;
-    if (tempBoard[sr][sc] !== playerColor) return false;
-    if (tempBoard[tr][tc] !== EMPTY) return false;
+  if (!inBounds(sr, sc) || !inBounds(tr, tc)) return false;
+  if (tempBoard[sr][sc] !== playerColor) return false;
+  if (tempBoard[tr][tc] !== EMPTY) return false;
 
-    const dRow = tr - sr;
-    const dCol = tc - sc;
-    const absDRow = Math.abs(dRow);
-    const absDCol = Math.abs(dCol);
-    const step = Math.max(absDRow, absDCol);
+  const dRow = tr - sr;
+  const dCol = tc - sc;
+  const absDRow = Math.abs(dRow);
+  const absDCol = Math.abs(dCol);
+  const step = Math.max(absDRow, absDCol);
 
-    if (!(step >= 1 && step <= 2)) return false;
+  if (!(step >= 1 && step <= 2)) return false;
 
-    return (absDRow === step && absDCol === 0) ||
-           (absDRow === 0 && absDCol === step) ||
-           (absDRow === step && absDCol === step);
+  return (
+    (absDRow === step && absDCol === 0) ||
+    (absDRow === 0 && absDCol === step) ||
+    (absDRow === step && absDCol === step)
+  );
 }
 
 function applyMoveOnTempBoard(tempBoard, sr, sc, tr, tc, playerColor) {
-    const isJump = Math.max(Math.abs(tr - sr), Math.abs(tc - sc)) === 2;
-    let flippedCount = 0;
+  const isJump = Math.max(Math.abs(tr - sr), Math.abs(tc - sc)) === 2;
+  let flippedCount = 0;
 
-    if (isJump) {
-        tempBoard[sr][sc] = EMPTY;
-    }
-    tempBoard[tr][tc] = playerColor;
+  if (isJump) {
+    tempBoard[sr][sc] = EMPTY;
+  }
+  tempBoard[tr][tc] = playerColor;
 
-    const oppColor = opponent(playerColor);
-    for (let i = 0; i < 8; i++) {
-        const r = tr + dr[i];
-        const c = tc + dc[i];
-        if (inBounds(r, c) && tempBoard[r][c] === oppColor) {
-            tempBoard[r][c] = playerColor;
-            flippedCount++;
-        }
+  const oppColor = opponent(playerColor);
+  for (let i = 0; i < 8; i++) {
+    const r = tr + dr[i];
+    const c = tc + dc[i];
+    if (inBounds(r, c) && tempBoard[r][c] === oppColor) {
+      tempBoard[r][c] = playerColor;
+      flippedCount++;
     }
-    return { flippedCount, isJump };
+  }
+  return { flippedCount, isJump };
 }
 
 function countPieces(boardState, playerColor) {
-    let count = 0;
-    for (let r = 0; r < BOARD_SIZE; r++) {
-        for (let c = 0; c < BOARD_SIZE; c++) {
-            if (boardState[r][c] === playerColor) {
-                count++;
-            }
-        }
+  let count = 0;
+  for (let r = 0; r < BOARD_SIZE; r++) {
+    for (let c = 0; c < BOARD_SIZE; c++) {
+      if (boardState[r][c] === playerColor) {
+        count++;
+      }
     }
-    return count;
+  }
+  return count;
 }
 
-// getValidMoves´Â is_jump ÇÃ·¡±×¸¦ ÀÌ¹Ì ¹İÈ¯ÇÏ¹Ç·Î º¯°æ ¾øÀ½
+// getValidMovesëŠ” is_jump í”Œë˜ê·¸ë¥¼ ì´ë¯¸ ë°˜í™˜í•˜ë¯€ë¡œ ë³€ê²½ ì—†ìŒ
 function getValidMoves(boardState, playerColor) {
-    const moves = [];
-    for (let rStart = 0; rStart < BOARD_SIZE; rStart++) {
-        for (let cStart = 0; cStart < BOARD_SIZE; cStart++) {
-            if (boardState[rStart][cStart] === playerColor) {
-                for (let stepSize = 1; stepSize <= 2; stepSize++) {
-                    for (let i = 0; i < 8; i++) {
-                        const rTarget = rStart + dr[i] * stepSize;
-                        const cTarget = cStart + dc[i] * stepSize;
-                        if (isValidMoveOnTempBoard(boardState, rStart, cStart, rTarget, cTarget, playerColor)) {
-                            moves.push({ sx: rStart, sy: cStart, tx: rTarget, ty: cTarget, is_jump: stepSize === 2 });
-                        }
-                    }
-                }
+  const moves = [];
+  for (let rStart = 0; rStart < BOARD_SIZE; rStart++) {
+    for (let cStart = 0; cStart < BOARD_SIZE; cStart++) {
+      if (boardState[rStart][cStart] === playerColor) {
+        for (let stepSize = 1; stepSize <= 2; stepSize++) {
+          for (let i = 0; i < 8; i++) {
+            const rTarget = rStart + dr[i] * stepSize;
+            const cTarget = cStart + dc[i] * stepSize;
+            if (
+              isValidMoveOnTempBoard(
+                boardState,
+                rStart,
+                cStart,
+                rTarget,
+                cTarget,
+                playerColor
+              )
+            ) {
+              moves.push({
+                sx: rStart,
+                sy: cStart,
+                tx: rTarget,
+                ty: cTarget,
+                is_jump: stepSize === 2,
+              });
             }
+          }
         }
+      }
     }
-    return moves;
+  }
+  return moves;
 }
 
-
-// --- AI ·ÎÁ÷ (ÀÌÀü°ú µ¿ÀÏ, º¯°æ ¾øÀ½) ---
+// --- AI ë¡œì§ (ì´ì „ê³¼ ë™ì¼, ë³€ê²½ ì—†ìŒ) ---
 function aiMoveGenerate(currentBoardState, aiColor) {
-    const possibleMoves = getValidMoves(currentBoardState, aiColor);
+  const possibleMoves = getValidMoves(currentBoardState, aiColor);
 
-    if (!possibleMoves.length) {
-        return null;
-    }
+  if (!possibleMoves.length) {
+    return null;
+  }
 
-    let bestMoveCandidate = possibleMoves[0];
-    let maxScoreAfterOpponentReply = -Infinity;
-    let maxImmediateFlipsForBestScore = -1;
-    const humanColor = opponent(aiColor);
+  let bestMoveCandidate = possibleMoves[0];
+  let maxScoreAfterOpponentReply = -Infinity;
+  let maxImmediateFlipsForBestScore = -1;
+  const humanColor = opponent(aiColor);
 
-    for (const move of possibleMoves) {
-        let tempBoardAfterMyMove = deepCopy(currentBoardState);
-        const { flippedCount: immediateFlips } = applyMoveOnTempBoard(
-            tempBoardAfterMyMove,
-            move.sx, move.sy, move.tx, move.ty,
-            aiColor
+  for (const move of possibleMoves) {
+    let tempBoardAfterMyMove = deepCopy(currentBoardState);
+    const { flippedCount: immediateFlips } = applyMoveOnTempBoard(
+      tempBoardAfterMyMove,
+      move.sx,
+      move.sy,
+      move.tx,
+      move.ty,
+      aiColor
+    );
+    move.immediate_flips = immediateFlips;
+
+    const opponentPossibleMoves = getValidMoves(
+      tempBoardAfterMyMove,
+      humanColor
+    );
+    let minMyScoreThisBranch = Infinity;
+
+    if (!opponentPossibleMoves.length) {
+      const myScore = countPieces(tempBoardAfterMyMove, aiColor);
+      const opponentScore = countPieces(tempBoardAfterMyMove, humanColor);
+      minMyScoreThisBranch = myScore - opponentScore;
+    } else {
+      for (const oppMove of opponentPossibleMoves) {
+        let tempBoardAfterOpponentMove = deepCopy(tempBoardAfterMyMove);
+        applyMoveOnTempBoard(
+          tempBoardAfterOpponentMove,
+          oppMove.sx,
+          oppMove.sy,
+          oppMove.tx,
+          oppMove.ty,
+          humanColor
         );
-        move.immediate_flips = immediateFlips;
-
-        const opponentPossibleMoves = getValidMoves(tempBoardAfterMyMove, humanColor);
-        let minMyScoreThisBranch = Infinity;
-
-        if (!opponentPossibleMoves.length) {
-            const myScore = countPieces(tempBoardAfterMyMove, aiColor);
-            const opponentScore = countPieces(tempBoardAfterMyMove, humanColor);
-            minMyScoreThisBranch = myScore - opponentScore;
-        } else {
-            for (const oppMove of opponentPossibleMoves) {
-                let tempBoardAfterOpponentMove = deepCopy(tempBoardAfterMyMove);
-                applyMoveOnTempBoard(
-                    tempBoardAfterOpponentMove,
-                    oppMove.sx, oppMove.sy, oppMove.tx, oppMove.ty,
-                    humanColor
-                );
-                const myScore = countPieces(tempBoardAfterOpponentMove, aiColor);
-                const opponentScore = countPieces(tempBoardAfterOpponentMove, humanColor);
-                const currentScoreDiff = myScore - opponentScore;
-                if (currentScoreDiff < minMyScoreThisBranch) {
-                    minMyScoreThisBranch = currentScoreDiff;
-                }
-            }
+        const myScore = countPieces(tempBoardAfterOpponentMove, aiColor);
+        const opponentScore = countPieces(
+          tempBoardAfterOpponentMove,
+          humanColor
+        );
+        const currentScoreDiff = myScore - opponentScore;
+        if (currentScoreDiff < minMyScoreThisBranch) {
+          minMyScoreThisBranch = currentScoreDiff;
         }
-        move.score_after_opponent_reply = minMyScoreThisBranch;
-
-        if (move.score_after_opponent_reply > maxScoreAfterOpponentReply) {
-            maxScoreAfterOpponentReply = move.score_after_opponent_reply;
-            maxImmediateFlipsForBestScore = move.immediate_flips;
-            bestMoveCandidate = move;
-        } else if (move.score_after_opponent_reply === maxScoreAfterOpponentReply) {
-            if (move.immediate_flips > maxImmediateFlipsForBestScore) {
-                maxImmediateFlipsForBestScore = move.immediate_flips;
-                bestMoveCandidate = move;
-            } else if (move.immediate_flips === maxImmediateFlipsForBestScore) {
-                if (bestMoveCandidate.is_jump && !move.is_jump) {
-                    bestMoveCandidate = move;
-                }
-            }
-        }
+      }
     }
-    return bestMoveCandidate;
+    move.score_after_opponent_reply = minMyScoreThisBranch;
+
+    if (move.score_after_opponent_reply > maxScoreAfterOpponentReply) {
+      maxScoreAfterOpponentReply = move.score_after_opponent_reply;
+      maxImmediateFlipsForBestScore = move.immediate_flips;
+      bestMoveCandidate = move;
+    } else if (move.score_after_opponent_reply === maxScoreAfterOpponentReply) {
+      if (move.immediate_flips > maxImmediateFlipsForBestScore) {
+        maxImmediateFlipsForBestScore = move.immediate_flips;
+        bestMoveCandidate = move;
+      } else if (move.immediate_flips === maxImmediateFlipsForBestScore) {
+        if (bestMoveCandidate.is_jump && !move.is_jump) {
+          bestMoveCandidate = move;
+        }
+      }
+    }
+  }
+  return bestMoveCandidate;
 }
 
-// --- ·»´õ¸µ ÇÔ¼ö ---
+// --- ë Œë”ë§ í•¨ìˆ˜ ---
 function drawBoard() {
-    ctx.strokeStyle = GREY_COLOR;
-    ctx.lineWidth = 1;
-    for (let r = 0; r < BOARD_SIZE; r++) {
-        for (let c = 0; c < BOARD_SIZE; c++) {
-            ctx.strokeRect(MARGIN + c * SQUARE_SIZE, MARGIN + r * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE);
-        }
+  ctx.strokeStyle = GREY_COLOR;
+  ctx.lineWidth = 1;
+  for (let r = 0; r < BOARD_SIZE; r++) {
+    for (let c = 0; c < BOARD_SIZE; c++) {
+      ctx.strokeRect(
+        MARGIN + c * SQUARE_SIZE,
+        MARGIN + r * SQUARE_SIZE,
+        SQUARE_SIZE,
+        SQUARE_SIZE
+      );
     }
+  }
 }
 
 function drawPieces() {
-    const radius = SQUARE_SIZE / 2 - 8; // ¸» Å©±â Á¶Àı
-    if (radius < 5) radius = 5; // ÃÖ¼Ò ¹İÁö¸§
+  const radius = SQUARE_SIZE / 2 - 8; // ë§ í¬ê¸° ì¡°ì ˆ
+  if (radius < 5) radius = 5; // ìµœì†Œ ë°˜ì§€ë¦„
 
-    for (let r = 0; r < BOARD_SIZE; r++) {
-        for (let c = 0; c < BOARD_SIZE; c++) {
-            const piece = board[r][c];
-            const centerX = MARGIN + c * SQUARE_SIZE + SQUARE_SIZE / 2;
-            const centerY = MARGIN + r * SQUARE_SIZE + SQUARE_SIZE / 2;
+  for (let r = 0; r < BOARD_SIZE; r++) {
+    for (let c = 0; c < BOARD_SIZE; c++) {
+      const piece = board[r][c];
+      const centerX = MARGIN + c * SQUARE_SIZE + SQUARE_SIZE / 2;
+      const centerY = MARGIN + r * SQUARE_SIZE + SQUARE_SIZE / 2;
 
-            if (selectedPieceCoords && selectedPieceCoords.r === r && selectedPieceCoords.c === c) {
-                ctx.fillStyle = HIGHLIGHT_SELECTED_COLOR;
-                ctx.fillRect(MARGIN + c * SQUARE_SIZE, MARGIN + r * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE);
-            }
+      if (
+        selectedPieceCoords &&
+        selectedPieceCoords.r === r &&
+        selectedPieceCoords.c === c
+      ) {
+        ctx.fillStyle = HIGHLIGHT_SELECTED_COLOR;
+        ctx.fillRect(
+          MARGIN + c * SQUARE_SIZE,
+          MARGIN + r * SQUARE_SIZE,
+          SQUARE_SIZE,
+          SQUARE_SIZE
+        );
+      }
 
-            if (piece === PLAYER_R) {
-                ctx.fillStyle = RED_PIECE_COLOR;
-                ctx.beginPath();
-                ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-                ctx.fill();
-            } else if (piece === PLAYER_B) {
-                ctx.fillStyle = BLUE_PIECE_COLOR;
-                ctx.beginPath();
-                ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-                ctx.fill();
-            }
-        }
+      if (piece === PLAYER_R) {
+        ctx.fillStyle = RED_PIECE_COLOR;
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+        ctx.fill();
+      } else if (piece === PLAYER_B) {
+        ctx.fillStyle = BLUE_PIECE_COLOR;
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+        ctx.fill();
+      }
     }
+  }
 
-    if (selectedPieceCoords && humanValidMovesFromSelected.length > 0) {
-        humanValidMovesFromSelected.forEach(move => {
-            const tr = move.tx;
-            const tc = move.ty;
-            // 2Ä­ ÀÌµ¿(Á¡ÇÁ)ÀÎÁö 1Ä­ ÀÌµ¿ÀÎÁö¿¡ µû¶ó ´Ù¸¥ »ö»ó Àû¿ë
-            ctx.fillStyle = move.is_jump ? HIGHLIGHT_JUMP_DST_COLOR : HIGHLIGHT_VALID_DST_COLOR;
-            ctx.fillRect(MARGIN + tc * SQUARE_SIZE, MARGIN + tr * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE);
+  if (selectedPieceCoords && humanValidMovesFromSelected.length > 0) {
+    humanValidMovesFromSelected.forEach((move) => {
+      const tr = move.tx;
+      const tc = move.ty;
+      // 2ì¹¸ ì´ë™(ì í”„)ì¸ì§€ 1ì¹¸ ì´ë™ì¸ì§€ì— ë”°ë¼ ë‹¤ë¥¸ ìƒ‰ìƒ ì ìš©
+      ctx.fillStyle = move.is_jump
+        ? HIGHLIGHT_JUMP_DST_COLOR
+        : HIGHLIGHT_VALID_DST_COLOR;
+      ctx.fillRect(
+        MARGIN + tc * SQUARE_SIZE,
+        MARGIN + tr * SQUARE_SIZE,
+        SQUARE_SIZE,
+        SQUARE_SIZE
+      );
 
-            // ¸ñÀûÁö¿¡ ÀÛÀº ¿ø Ç¥½Ã (¼±ÅÃ »çÇ×)
-            ctx.beginPath();
-            let smallRadius = radius / 3;
-            if (smallRadius < 2) smallRadius = 2;
-            ctx.arc(MARGIN + tc * SQUARE_SIZE + SQUARE_SIZE / 2, MARGIN + tr * SQUARE_SIZE + SQUARE_SIZE / 2, smallRadius, 0, 2 * Math.PI);
-            ctx.fillStyle = 'rgba(0,0,0,0.2)';
-            ctx.fill();
-        });
-    }
+      // ëª©ì ì§€ì— ì‘ì€ ì› í‘œì‹œ (ì„ íƒ ì‚¬í•­)
+      ctx.beginPath();
+      let smallRadius = radius / 3;
+      if (smallRadius < 2) smallRadius = 2;
+      ctx.arc(
+        MARGIN + tc * SQUARE_SIZE + SQUARE_SIZE / 2,
+        MARGIN + tr * SQUARE_SIZE + SQUARE_SIZE / 2,
+        smallRadius,
+        0,
+        2 * Math.PI
+      );
+      ctx.fillStyle = "rgba(0,0,0,0.2)";
+      ctx.fill();
+    });
+  }
 }
 
-
 function updateInfoPanel() {
-    const rPieces = countPieces(board, PLAYER_R);
-    const bPieces = countPieces(board, PLAYER_B);
-    redScoreTextEl.textContent = `»¡°­ (»ç¶÷): ${rPieces}`;
-    blueScoreTextEl.textContent = `ÆÄ¶û (AI): ${bPieces}`;
+  const rPieces = countPieces(board, PLAYER_R);
+  const bPieces = countPieces(board, PLAYER_B);
+  redScoreTextEl.textContent = `ë¹¨ê°• (ì‚¬ëŒ): ${rPieces}`;
+  blueScoreTextEl.textContent = `íŒŒë‘ (AI): ${bPieces}`;
 
-    let turnMsg = "°ÔÀÓ Á¾·á!";
-    if (!gameOver) {
-        turnMsg = currentPlayer === HUMAN_PLAYER ? "´ç½Å ÅÏ (»¡°­)" : "AI ÅÏ (ÆÄ¶û)";
-    }
-    currentPlayerTurnTextEl.textContent = turnMsg;
-    gameMessageTextEl.textContent = gameMessage;
+  let turnMsg = "ê²Œì„ ì¢…ë£Œ!";
+  if (!gameOver) {
+    turnMsg =
+      currentPlayer === HUMAN_PLAYER ? "ë‹¹ì‹  í„´ (ë¹¨ê°•)" : "AI í„´ (íŒŒë‘)";
+  }
+  currentPlayerTurnTextEl.textContent = turnMsg;
+  gameMessageTextEl.textContent = gameMessage;
 }
 
 function updateTimerDisplay() {
-    if (!gameOver && currentPlayer === HUMAN_PLAYER) {
-        const timeElapsed = Math.floor((Date.now() - turnStartTime) / 1000);
-        const timeLeft = Math.max(0, HUMAN_TIME_LIMIT_S - timeElapsed);
-        timerTextEl.textContent = `³²Àº ½Ã°£: ${timeLeft}ÃÊ`;
-        if (timeLeft <= 0) {
-            handleHumanTimeout();
-        }
-    } else {
-        timerTextEl.textContent = "";
+  if (!gameOver && currentPlayer === HUMAN_PLAYER) {
+    const timeElapsed = Math.floor((Date.now() - turnStartTime) / 1000);
+    const timeLeft = Math.max(0, HUMAN_TIME_LIMIT_S - timeElapsed);
+    timerTextEl.textContent = `ë‚¨ì€ ì‹œê°„: ${timeLeft}ì´ˆ`;
+    if (timeLeft <= 0) {
+      handleHumanTimeout();
     }
+  } else {
+    timerTextEl.textContent = "";
+  }
 }
 
 function handleHumanTimeout() {
-    clearInterval(humanTimerInterval);
-    humanTimerInterval = null;
-    gameMessage = "½Ã°£ ÃÊ°ú! ÅÏÀ» ³Ñ±é´Ï´Ù.";
-    selectedPieceCoords = null;
-    humanValidMovesFromSelected = [];
+  clearInterval(humanTimerInterval);
+  humanTimerInterval = null;
+  gameMessage = "ì‹œê°„ ì´ˆê³¼! í„´ì„ ë„˜ê¹ë‹ˆë‹¤.";
+  selectedPieceCoords = null;
+  humanValidMovesFromSelected = [];
 
-    if (lastPlayerPassed) {
-        endGameDueToConsecutivePassOrTimeout("AI ÆĞ½º ÈÄ »ç¶÷ ½Ã°£ ÃÊ°ú!");
-    } else {
-        lastPlayerPassed = true;
-        switchTurn();
-    }
-    renderGame();
+  if (lastPlayerPassed) {
+    endGameDueToConsecutivePassOrTimeout("AI íŒ¨ìŠ¤ í›„ ì‚¬ëŒ ì‹œê°„ ì´ˆê³¼!");
+  } else {
+    lastPlayerPassed = true;
+    switchTurn();
+  }
+  renderGame();
 }
 
-
-// --- °ÔÀÓ Èå¸§ ¹× »óÅÂ °ü¸® ---
+// --- ê²Œì„ íë¦„ ë° ìƒíƒœ ê´€ë¦¬ ---
 function resetGame() {
-    adjustGameSize(); // ¸®¼Â ½Ã °ÔÀÓ Å©±â ´Ù½Ã Á¶Àı
-    board = initialBoard();
-    currentPlayer = HUMAN_PLAYER;
-    selectedPieceCoords = null;
-    humanValidMovesFromSelected = [];
-    gameOver = false;
-    winner = null;
-    gameMessage = "°ÔÀÓÀ» ½ÃÀÛÇÕ´Ï´Ù. ´ç½ÅÀÇ ÅÏÀÔ´Ï´Ù.";
-    turnStartTime = Date.now();
-    lastPlayerPassed = false;
+  adjustGameSize(); // ë¦¬ì…‹ ì‹œ ê²Œì„ í¬ê¸° ë‹¤ì‹œ ì¡°ì ˆ
+  board = initialBoard();
+  currentPlayer = HUMAN_PLAYER;
+  selectedPieceCoords = null;
+  humanValidMovesFromSelected = [];
+  gameOver = false;
+  winner = null;
+  gameMessage = "ê²Œì„ì„ ì‹œì‘í•©ë‹ˆë‹¤. ë‹¹ì‹ ì˜ í„´ì…ë‹ˆë‹¤.";
+  turnStartTime = Date.now();
+  lastPlayerPassed = false;
 
-    if (humanTimerInterval) clearInterval(humanTimerInterval);
-    if (currentPlayer === HUMAN_PLAYER) {
-        humanTimerInterval = setInterval(updateTimerDisplay, 1000);
-        updateTimerDisplay();
-    } else {
-        timerTextEl.textContent = "";
-    }
+  if (humanTimerInterval) clearInterval(humanTimerInterval);
+  if (currentPlayer === HUMAN_PLAYER) {
+    humanTimerInterval = setInterval(updateTimerDisplay, 1000);
+    updateTimerDisplay();
+  } else {
+    timerTextEl.textContent = "";
+  }
 
-    gameOverScreenEl.style.display = 'none';
-    renderGame();
+  gameOverScreenEl.style.display = "none";
+  renderGame();
 }
 
 function switchTurn() {
-    currentPlayer = opponent(currentPlayer);
-    turnStartTime = Date.now();
-    selectedPieceCoords = null;
-    humanValidMovesFromSelected = [];
+  currentPlayer = opponent(currentPlayer);
+  turnStartTime = Date.now();
+  selectedPieceCoords = null;
+  humanValidMovesFromSelected = [];
 
-    if (humanTimerInterval) clearInterval(humanTimerInterval);
-    if (!gameOver && currentPlayer === HUMAN_PLAYER) {
-        gameMessage = "´ç½ÅÀÇ ÅÏÀÔ´Ï´Ù.";
-        humanTimerInterval = setInterval(updateTimerDisplay, 1000);
-        updateTimerDisplay();
-    } else {
-        timerTextEl.textContent = "";
-    }
+  if (humanTimerInterval) clearInterval(humanTimerInterval);
+  if (!gameOver && currentPlayer === HUMAN_PLAYER) {
+    gameMessage = "ë‹¹ì‹ ì˜ í„´ì…ë‹ˆë‹¤.";
+    humanTimerInterval = setInterval(updateTimerDisplay, 1000);
+    updateTimerDisplay();
+  } else {
+    timerTextEl.textContent = "";
+  }
 
-    checkForPassOrGameOver();
+  checkForPassOrGameOver();
 
-    if (!gameOver && currentPlayer === AI_PLAYER) {
-        gameMessage = "AI°¡ »ı°¢ ÁßÀÔ´Ï´Ù...";
-        renderGame();
-        setTimeout(runAiTurn, 800);
-    }
+  if (!gameOver && currentPlayer === AI_PLAYER) {
+    gameMessage = "AIê°€ ìƒê° ì¤‘ì…ë‹ˆë‹¤...";
     renderGame();
+    setTimeout(runAiTurn, 800);
+  }
+  renderGame();
 }
 
 function runAiTurn() {
-    if (gameOver || currentPlayer !== AI_PLAYER) return;
+  if (gameOver || currentPlayer !== AI_PLAYER) return;
 
-    const aiMove = aiMoveGenerate(board, AI_PLAYER);
-    if (aiMove) {
-        applyMoveOnTempBoard(board, aiMove.sx, aiMove.sy, aiMove.tx, aiMove.ty, AI_PLAYER);
-        gameMessage = `AI ÀÌµ¿: (${aiMove.sx + 1},${aiMove.sy + 1}) ¡æ (${aiMove.tx + 1},${aiMove.ty + 1})`;
-        lastPlayerPassed = false;
-    } else {
-        gameMessage = "AI°¡ ¿òÁ÷ÀÏ ¼ö ¾ø¾î ÆĞ½ºÇÕ´Ï´Ù.";
-        if (lastPlayerPassed) {
-            endGameDueToConsecutivePassOrTimeout("¾çÂÊ ¸ğµÎ ÆĞ½º!");
-            return;
-        }
-        lastPlayerPassed = true;
+  const aiMove = aiMoveGenerate(board, AI_PLAYER);
+  if (aiMove) {
+    applyMoveOnTempBoard(
+      board,
+      aiMove.sx,
+      aiMove.sy,
+      aiMove.tx,
+      aiMove.ty,
+      AI_PLAYER
+    );
+    gameMessage = `AI ì´ë™: (${aiMove.sx + 1},${aiMove.sy + 1}) â†’ (${
+      aiMove.tx + 1
+    },${aiMove.ty + 1})`;
+    lastPlayerPassed = false;
+  } else {
+    gameMessage = "AIê°€ ì›€ì§ì¼ ìˆ˜ ì—†ì–´ íŒ¨ìŠ¤í•©ë‹ˆë‹¤.";
+    if (lastPlayerPassed) {
+      endGameDueToConsecutivePassOrTimeout("ì–‘ìª½ ëª¨ë‘ íŒ¨ìŠ¤!");
+      return;
     }
-    switchTurn();
+    lastPlayerPassed = true;
+  }
+  switchTurn();
 }
 
 function checkForPassOrGameOver() {
-    if (gameOver) return;
+  if (gameOver) return;
 
-    const rPieces = countPieces(board, PLAYER_R);
-    const bPieces = countPieces(board, PLAYER_B);
+  const rPieces = countPieces(board, PLAYER_R);
+  const bPieces = countPieces(board, PLAYER_B);
 
-    if (rPieces === 0) {
-        triggerGameOver(PLAYER_B, "»¡°­ ÇÃ·¹ÀÌ¾î ¸»ÀÌ ¾ø½À´Ï´Ù.");
-        return;
-    }
-    if (bPieces === 0) {
-        triggerGameOver(PLAYER_R, "ÆÄ¶û ÇÃ·¹ÀÌ¾î ¸»ÀÌ ¾ø½À´Ï´Ù.");
-        return;
-    }
+  if (rPieces === 0) {
+    triggerGameOver(PLAYER_B, "ë¹¨ê°• í”Œë ˆì´ì–´ ë§ì´ ì—†ìŠµë‹ˆë‹¤.");
+    return;
+  }
+  if (bPieces === 0) {
+    triggerGameOver(PLAYER_R, "íŒŒë‘ í”Œë ˆì´ì–´ ë§ì´ ì—†ìŠµë‹ˆë‹¤.");
+    return;
+  }
 
-    const emptyCells = board.flat().filter(cell => cell === EMPTY).length;
-    if (emptyCells === 0) {
-        endGameDueToBoardFull();
-        return;
-    }
+  const emptyCells = board.flat().filter((cell) => cell === EMPTY).length;
+  if (emptyCells === 0) {
+    endGameDueToBoardFull();
+    return;
+  }
 
-    const currentPlayerMoves = getValidMoves(board, currentPlayer);
-    if (!currentPlayerMoves.length) {
-        if (currentPlayer === HUMAN_PLAYER) gameMessage = "¿òÁ÷ÀÏ ¼ö ÀÖ´Â ¸»ÀÌ ¾ø½À´Ï´Ù. ÅÏÀÌ ÀÚµ¿À¸·Î ³Ñ¾î°©´Ï´Ù.";
+  const currentPlayerMoves = getValidMoves(board, currentPlayer);
+  if (!currentPlayerMoves.length) {
+    if (currentPlayer === HUMAN_PLAYER)
+      gameMessage = "ì›€ì§ì¼ ìˆ˜ ìˆëŠ” ë§ì´ ì—†ìŠµë‹ˆë‹¤. í„´ì´ ìë™ìœ¼ë¡œ ë„˜ì–´ê°‘ë‹ˆë‹¤.";
 
-        if (lastPlayerPassed) {
-            endGameDueToConsecutivePassOrTimeout("¾çÂÊ ¸ğµÎ ¿òÁ÷ÀÏ ¼ö ¾ø½À´Ï´Ù!");
-        } else {
-            lastPlayerPassed = true;
-            if (currentPlayer === HUMAN_PLAYER) {
-                renderGame();
-                setTimeout(switchTurn, 1500);
-            }
-        }
+    if (lastPlayerPassed) {
+      endGameDueToConsecutivePassOrTimeout("ì–‘ìª½ ëª¨ë‘ ì›€ì§ì¼ ìˆ˜ ì—†ìŠµë‹ˆë‹¤!");
     } else {
-        lastPlayerPassed = false;
+      lastPlayerPassed = true;
+      if (currentPlayer === HUMAN_PLAYER) {
+        renderGame();
+        setTimeout(switchTurn, 1500);
+      }
     }
+  } else {
+    lastPlayerPassed = false;
+  }
 }
 
 function triggerGameOver(winPlayer, reason) {
-    gameOver = true;
-    winner = winPlayer;
-    gameMessage = reason;
-    if (humanTimerInterval) clearInterval(humanTimerInterval);
+  gameOver = true;
+  winner = winPlayer;
+  gameMessage = reason;
+  if (humanTimerInterval) clearInterval(humanTimerInterval);
 
-    gameOverTitleEl.textContent = winner === "Draw" ? "¹«½ÂºÎÀÔ´Ï´Ù!" : (winner === HUMAN_PLAYER ? "´ç½Å (»¡°­) ½Â¸®!" : "AI (ÆÄ¶û) ½Â¸®!");
-    gameOverReasonEl.textContent = reason;
-    gameOverScreenEl.style.display = 'flex';
-    renderGame();
+  gameOverTitleEl.textContent =
+    winner === "Draw"
+      ? "ë¬´ìŠ¹ë¶€ì…ë‹ˆë‹¤!"
+      : winner === HUMAN_PLAYER
+      ? "ë‹¹ì‹  (ë¹¨ê°•) ìŠ¹ë¦¬!"
+      : "AI (íŒŒë‘) ìŠ¹ë¦¬!";
+  gameOverReasonEl.textContent = reason;
+  gameOverScreenEl.style.display = "flex";
+  renderGame();
 }
 
 function endGameDueToBoardFull() {
-    const rPieces = countPieces(board, PLAYER_R);
-    const bPieces = countPieces(board, PLAYER_B);
-    let finalWinner;
-    if (rPieces > bPieces) finalWinner = PLAYER_R;
-    else if (bPieces > rPieces) finalWinner = PLAYER_B;
-    else finalWinner = "Draw";
-    triggerGameOver(finalWinner, "º¸µå°¡ °¡µæ Ã¡½À´Ï´Ù.");
+  const rPieces = countPieces(board, PLAYER_R);
+  const bPieces = countPieces(board, PLAYER_B);
+  let finalWinner;
+  if (rPieces > bPieces) finalWinner = PLAYER_R;
+  else if (bPieces > rPieces) finalWinner = PLAYER_B;
+  else finalWinner = "Draw";
+  triggerGameOver(finalWinner, "ë³´ë“œê°€ ê°€ë“ ì°¼ìŠµë‹ˆë‹¤.");
 }
 
 function endGameDueToConsecutivePassOrTimeout(reasonPrefix) {
-    const rPieces = countPieces(board, PLAYER_R);
-    const bPieces = countPieces(board, PLAYER_B);
-    let finalWinner;
-    if (rPieces > bPieces) finalWinner = PLAYER_R;
-    else if (bPieces > rPieces) finalWinner = PLAYER_B;
-    else finalWinner = "Draw";
-    triggerGameOver(finalWinner, `${reasonPrefix} ÃÖÁ¾ Á¡¼ö·Î ½ÂÆĞ¸¦ °áÁ¤ÇÕ´Ï´Ù.`);
+  const rPieces = countPieces(board, PLAYER_R);
+  const bPieces = countPieces(board, PLAYER_B);
+  let finalWinner;
+  if (rPieces > bPieces) finalWinner = PLAYER_R;
+  else if (bPieces > rPieces) finalWinner = PLAYER_B;
+  else finalWinner = "Draw";
+  triggerGameOver(
+    finalWinner,
+    `${reasonPrefix} ìµœì¢… ì ìˆ˜ë¡œ ìŠ¹íŒ¨ë¥¼ ê²°ì •í•©ë‹ˆë‹¤.`
+  );
 }
 
-
-// --- ÀÌº¥Æ® ÇÚµé·¯ ---
+// --- ì´ë²¤íŠ¸ í•¸ë“¤ëŸ¬ ---
 function getClickedSquare(event) {
-    const rect = canvas.getBoundingClientRect();
-    // ÅÍÄ¡ ÀÌº¥Æ®¿Í ¸¶¿ì½º ÀÌº¥Æ® ÁÂÇ¥ ¾ò´Â ¹æ½Ä ÅëÀÏ
-    const clientX = event.touches ? event.touches[0].clientX : event.clientX;
-    const clientY = event.touches ? event.touches[0].clientY : event.clientY;
+  const rect = canvas.getBoundingClientRect();
+  // í„°ì¹˜ ì´ë²¤íŠ¸ì™€ ë§ˆìš°ìŠ¤ ì´ë²¤íŠ¸ ì¢Œí‘œ ì–»ëŠ” ë°©ì‹ í†µì¼
+  const clientX = event.touches ? event.touches[0].clientX : event.clientX;
+  const clientY = event.touches ? event.touches[0].clientY : event.clientY;
 
-    const x = clientX - rect.left;
-    const y = clientY - rect.top;
+  const x = clientX - rect.left;
+  const y = clientY - rect.top;
 
-
-    if (x >= MARGIN && x < WIDTH - MARGIN && y >= MARGIN && y < CANVAS_HEIGHT - MARGIN) {
-        const c = Math.floor((x - MARGIN) / SQUARE_SIZE);
-        const r = Math.floor((y - MARGIN) / SQUARE_SIZE);
-        if (inBounds(r,c)) return { r, c };
-    }
-    return null;
+  if (
+    x >= MARGIN &&
+    x < WIDTH - MARGIN &&
+    y >= MARGIN &&
+    y < CANVAS_HEIGHT - MARGIN
+  ) {
+    const c = Math.floor((x - MARGIN) / SQUARE_SIZE);
+    const r = Math.floor((y - MARGIN) / SQUARE_SIZE);
+    if (inBounds(r, c)) return { r, c };
+  }
+  return null;
 }
 
 function handleCanvasInteraction(event) {
-    // ±âº» ½ºÅ©·Ñ µ¿ÀÛ ¹æÁö (ÅÍÄ¡ ½Ã È­¸é ÀÌµ¿ ¹æÁö)
-    // event.preventDefault(); // ÇÊ¿ä¿¡ µû¶ó Ãß°¡. Å¬¸¯ ÀÌº¥Æ®¿¡¼­´Â º¸Åë ºÒÇÊ¿ä.
+  // ê¸°ë³¸ ìŠ¤í¬ë¡¤ ë™ì‘ ë°©ì§€ (í„°ì¹˜ ì‹œ í™”ë©´ ì´ë™ ë°©ì§€)
+  // event.preventDefault(); // í•„ìš”ì— ë”°ë¼ ì¶”ê°€. í´ë¦­ ì´ë²¤íŠ¸ì—ì„œëŠ” ë³´í†µ ë¶ˆí•„ìš”.
 
-    if (gameOver) {
-        resetGame();
-        return;
-    }
-    if (currentPlayer !== HUMAN_PLAYER) return;
+  if (gameOver) {
+    resetGame();
+    return;
+  }
+  if (currentPlayer !== HUMAN_PLAYER) return;
 
-    const clickedPos = getClickedSquare(event);
-    if (!clickedPos) {
-        selectedPieceCoords = null;
-        humanValidMovesFromSelected = [];
-        gameMessage = "º¸µå ¾ÈÀ» Å¬¸¯ÇÏ¼¼¿ä.";
-        renderGame();
-        return;
-    }
-
-    const { r: rClicked, c: cClicked } = clickedPos;
-
-    if (!selectedPieceCoords) {
-        if (board[rClicked][cClicked] === HUMAN_PLAYER) {
-            selectedPieceCoords = { r: rClicked, c: cClicked };
-            const allHumanMoves = getValidMoves(board, HUMAN_PLAYER);
-            humanValidMovesFromSelected = allHumanMoves.filter(
-                m => m.sx === rClicked && m.sy === cClicked
-            );
-            if (!humanValidMovesFromSelected.length) {
-                gameMessage = "ÀÌ ¸»Àº ¿òÁ÷ÀÏ ¼ö ¾ø½À´Ï´Ù.";
-                selectedPieceCoords = null;
-            } else {
-                gameMessage = "¼±ÅÃµÊ. ¸ñÀûÁö¸¦ Å¬¸¯ÇÏ¼¼¿ä.";
-            }
-        } else if (board[rClicked][cClicked] === EMPTY) {
-            gameMessage = "ºó Ä­ÀÔ´Ï´Ù. ÀÚ½ÅÀÇ ¸»À» ¼±ÅÃÇÏ¼¼¿ä.";
-        } else {
-            gameMessage = "»ó´ë¹æÀÇ ¸»ÀÔ´Ï´Ù. ÀÚ½ÅÀÇ ¸»À» ¼±ÅÃÇÏ¼¼¿ä.";
-        }
-    } else {
-        const sr = selectedPieceCoords.r;
-        const sc = selectedPieceCoords.c;
-        const chosenMove = humanValidMovesFromSelected.find(
-            move => move.tx === rClicked && move.ty === cClicked
-        );
-
-        if (chosenMove) {
-            applyMoveOnTempBoard(board, sr, sc, rClicked, cClicked, HUMAN_PLAYER);
-            selectedPieceCoords = null;
-            humanValidMovesFromSelected = [];
-            gameMessage = "";
-            lastPlayerPassed = false;
-            switchTurn();
-        } else {
-            if (board[rClicked][cClicked] === HUMAN_PLAYER) {
-                selectedPieceCoords = { r: rClicked, c: cClicked };
-                const allHumanMoves = getValidMoves(board, HUMAN_PLAYER);
-                humanValidMovesFromSelected = allHumanMoves.filter(
-                    m => m.sx === rClicked && m.sy === cClicked
-                );
-                if (!humanValidMovesFromSelected.length) {
-                    gameMessage = "ÀÌ ¸»Àº ¿òÁ÷ÀÏ ¼ö ¾ø½À´Ï´Ù. ´Ù¸¥ ¸»À» ¼±ÅÃÇÏ¼¼¿ä.";
-                    selectedPieceCoords = null;
-                } else {
-                    gameMessage = "¼±ÅÃ º¯°æµÊ. ¸ñÀûÁö¸¦ Å¬¸¯ÇÏ¼¼¿ä.";
-                }
-            } else {
-                 gameMessage = "Àß¸øµÈ ¸ñÀûÁöÀÔ´Ï´Ù. À¯È¿ÇÑ À§Ä¡¸¦ ¼±ÅÃÇÏ¼¼¿ä.";
-            }
-        }
-    }
+  const clickedPos = getClickedSquare(event);
+  if (!clickedPos) {
+    selectedPieceCoords = null;
+    humanValidMovesFromSelected = [];
+    gameMessage = "ë³´ë“œ ì•ˆì„ í´ë¦­í•˜ì„¸ìš”.";
     renderGame();
-}
+    return;
+  }
 
+  const { r: rClicked, c: cClicked } = clickedPos;
 
-// --- ¸ŞÀÎ °ÔÀÓ ·çÇÁ (·»´õ¸µ) ---
-function renderGame() {
-    if (!ctx) return; // ¾ÆÁ÷ ÃÊ±âÈ­µÇÁö ¾Ê¾Ò´Ù¸é ½ÇÇàÇÏÁö ¾ÊÀ½
-    ctx.fillStyle = WHITE_COLOR;
-    ctx.fillRect(0, 0, WIDTH, CANVAS_HEIGHT);
+  if (!selectedPieceCoords) {
+    if (board[rClicked][cClicked] === HUMAN_PLAYER) {
+      selectedPieceCoords = { r: rClicked, c: cClicked };
+      const allHumanMoves = getValidMoves(board, HUMAN_PLAYER);
+      humanValidMovesFromSelected = allHumanMoves.filter(
+        (m) => m.sx === rClicked && m.sy === cClicked
+      );
+      if (!humanValidMovesFromSelected.length) {
+        gameMessage = "ì´ ë§ì€ ì›€ì§ì¼ ìˆ˜ ì—†ìŠµë‹ˆë‹¤.";
+        selectedPieceCoords = null;
+      } else {
+        gameMessage = "ì„ íƒë¨. ëª©ì ì§€ë¥¼ í´ë¦­í•˜ì„¸ìš”.";
+      }
+    } else if (board[rClicked][cClicked] === EMPTY) {
+      gameMessage = "ë¹ˆ ì¹¸ì…ë‹ˆë‹¤. ìì‹ ì˜ ë§ì„ ì„ íƒí•˜ì„¸ìš”.";
+    } else {
+      gameMessage = "ìƒëŒ€ë°©ì˜ ë§ì…ë‹ˆë‹¤. ìì‹ ì˜ ë§ì„ ì„ íƒí•˜ì„¸ìš”.";
+    }
+  } else {
+    const sr = selectedPieceCoords.r;
+    const sc = selectedPieceCoords.c;
+    const chosenMove = humanValidMovesFromSelected.find(
+      (move) => move.tx === rClicked && move.ty === cClicked
+    );
 
-    drawBoard();
-    drawPieces();
-    updateInfoPanel();
-}
-
-// --- ÃÊ±âÈ­ ---
-window.onload = function() {
-    canvas = document.getElementById('gameCanvas');
-    ctx = canvas.getContext('2d');
-
-    redScoreTextEl = document.getElementById('redScoreText');
-    blueScoreTextEl = document.getElementById('blueScoreText');
-    currentPlayerTurnTextEl = document.getElementById('currentPlayerTurnText');
-    timerTextEl = document.getElementById('timerText');
-    gameMessageTextEl = document.getElementById('gameMessageText');
-    gameOverScreenEl = document.getElementById('gameOverScreen');
-    gameOverTitleEl = document.getElementById('gameOverTitle');
-    gameOverReasonEl = document.getElementById('gameOverReason');
-    restartButtonEl = document.getElementById('restartButton'); // Restart ¹öÆ° DOM ¿ä¼Ò
-
-    // È­¸é Å©±â Á¶Àı ¹× ÃÊ±â °ÔÀÓ ¼³Á¤
-    adjustGameSize(); // ÃÖÃÊ ·Îµå ½Ã Å©±â Á¶Àı
-    resetGame(); // °ÔÀÓ »óÅÂ ÃÊ±âÈ­ ¹× Ã¹ ·»´õ¸µ
-
-    // ÀÌº¥Æ® ¸®½º³Ê
-    // ¸ğ¹ÙÀÏ ÅÍÄ¡¿Í µ¥½ºÅ©Å¾ ¸¶¿ì½º Å¬¸¯ ¸ğµÎ Áö¿ø
-    canvas.addEventListener('click', handleCanvasInteraction);
-    // canvas.addEventListener('touchstart', handleCanvasInteraction, { passive: false }); // ½ºÅ©·Ñ ¹æÁö°¡ ÇÊ¿äÇÏ´Ù¸é passive: false
-
-
-    gameOverScreenEl.addEventListener('click', resetGame);
-    restartButtonEl.addEventListener('click', resetGame); // Restart ¹öÆ°¿¡ resetGame ÇÔ¼ö ¿¬°á
-
-    document.addEventListener('keydown', (event) => {
-        if (event.key.toLowerCase() === 'r' && (gameOver || !gameOver)) { // ¾ğÁ¦µç RÅ°·Î ¸®¼Â °¡´ÉÇÏµµ·Ï
-            resetGame();
+    if (chosenMove) {
+      applyMoveOnTempBoard(board, sr, sc, rClicked, cClicked, HUMAN_PLAYER);
+      selectedPieceCoords = null;
+      humanValidMovesFromSelected = [];
+      gameMessage = "";
+      lastPlayerPassed = false;
+      switchTurn();
+    } else {
+      if (board[rClicked][cClicked] === HUMAN_PLAYER) {
+        selectedPieceCoords = { r: rClicked, c: cClicked };
+        const allHumanMoves = getValidMoves(board, HUMAN_PLAYER);
+        humanValidMovesFromSelected = allHumanMoves.filter(
+          (m) => m.sx === rClicked && m.sy === cClicked
+        );
+        if (!humanValidMovesFromSelected.length) {
+          gameMessage = "ì´ ë§ì€ ì›€ì§ì¼ ìˆ˜ ì—†ìŠµë‹ˆë‹¤. ë‹¤ë¥¸ ë§ì„ ì„ íƒí•˜ì„¸ìš”.";
+          selectedPieceCoords = null;
+        } else {
+          gameMessage = "ì„ íƒ ë³€ê²½ë¨. ëª©ì ì§€ë¥¼ í´ë¦­í•˜ì„¸ìš”.";
         }
-    });
+      } else {
+        gameMessage = "ì˜ëª»ëœ ëª©ì ì§€ì…ë‹ˆë‹¤. ìœ íš¨í•œ ìœ„ì¹˜ë¥¼ ì„ íƒí•˜ì„¸ìš”.";
+      }
+    }
+  }
+  renderGame();
+}
 
-    window.addEventListener('resize', () => {
-        adjustGameSize();
-        renderGame(); // ¸®»çÀÌÁî ÈÄ Áï½Ã ´Ù½Ã ±×¸®±â
-    });
+// --- ë©”ì¸ ê²Œì„ ë£¨í”„ (ë Œë”ë§) ---
+function renderGame() {
+  if (!ctx) return; // ì•„ì§ ì´ˆê¸°í™”ë˜ì§€ ì•Šì•˜ë‹¤ë©´ ì‹¤í–‰í•˜ì§€ ì•ŠìŒ
+  ctx.fillStyle = WHITE_COLOR;
+  ctx.fillRect(0, 0, WIDTH, CANVAS_HEIGHT);
+
+  drawBoard();
+  drawPieces();
+  updateInfoPanel();
+}
+
+// --- ì´ˆê¸°í™” ---
+window.onload = function () {
+  canvas = document.getElementById("gameCanvas");
+  ctx = canvas.getContext("2d");
+
+  redScoreTextEl = document.getElementById("redScoreText");
+  blueScoreTextEl = document.getElementById("blueScoreText");
+  currentPlayerTurnTextEl = document.getElementById("currentPlayerTurnText");
+  timerTextEl = document.getElementById("timerText");
+  gameMessageTextEl = document.getElementById("gameMessageText");
+  gameOverScreenEl = document.getElementById("gameOverScreen");
+  gameOverTitleEl = document.getElementById("gameOverTitle");
+  gameOverReasonEl = document.getElementById("gameOverReason");
+  restartButtonEl = document.getElementById("restartButton"); // Restart ë²„íŠ¼ DOM ìš”ì†Œ
+
+  // í™”ë©´ í¬ê¸° ì¡°ì ˆ ë° ì´ˆê¸° ê²Œì„ ì„¤ì •
+  adjustGameSize(); // ìµœì´ˆ ë¡œë“œ ì‹œ í¬ê¸° ì¡°ì ˆ
+  resetGame(); // ê²Œì„ ìƒíƒœ ì´ˆê¸°í™” ë° ì²« ë Œë”ë§
+
+  // ì´ë²¤íŠ¸ ë¦¬ìŠ¤ë„ˆ
+  // ëª¨ë°”ì¼ í„°ì¹˜ì™€ ë°ìŠ¤í¬íƒ‘ ë§ˆìš°ìŠ¤ í´ë¦­ ëª¨ë‘ ì§€ì›
+  canvas.addEventListener("click", handleCanvasInteraction);
+  // canvas.addEventListener('touchstart', handleCanvasInteraction, { passive: false }); // ìŠ¤í¬ë¡¤ ë°©ì§€ê°€ í•„ìš”í•˜ë‹¤ë©´ passive: false
+
+  gameOverScreenEl.addEventListener("click", resetGame);
+  restartButtonEl.addEventListener("click", resetGame); // Restart ë²„íŠ¼ì— resetGame í•¨ìˆ˜ ì—°ê²°
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key.toLowerCase() === "r" && (gameOver || !gameOver)) {
+      // ì–¸ì œë“  Rí‚¤ë¡œ ë¦¬ì…‹ ê°€ëŠ¥í•˜ë„ë¡
+      resetGame();
+    }
+  });
+
+  window.addEventListener("resize", () => {
+    adjustGameSize();
+    renderGame(); // ë¦¬ì‚¬ì´ì¦ˆ í›„ ì¦‰ì‹œ ë‹¤ì‹œ ê·¸ë¦¬ê¸°
+  });
 };
